@@ -1,0 +1,320 @@
+{
+  "generated_at": "2026-07-21T20:04:55.211560+00:00",
+  "purpose": "Insight-quality evidence: how much distinct-item and distinct-source support each theme/hypothesis has, plus honest coverage/ambiguity so hypotheses can be weighted, not trusted blindly.",
+  "coverage": {
+    "total_tagged": 392,
+    "relevant": 90,
+    "relevant_pct": 23.0,
+    "irrelevant_filtered": 302,
+    "no_signal_pct": 80.6,
+    "low_confidence_pct": 17.1,
+    "ambiguity_rate_pct": 80.9,
+    "confidence_breakdown": {
+      "high": 296,
+      "low": 67,
+      "medium": 29
+    }
+  },
+  "per_theme_evidence": [
+    {
+      "theme": "positive_discovery_experience",
+      "kind": "driver",
+      "evidence_items": 23,
+      "n_sources": 4,
+      "sources": [
+        "app_store",
+        "play_store",
+        "reddit",
+        "youtube"
+      ],
+      "triangulated": true,
+      "strength": "strong"
+    },
+    {
+      "theme": "assortment_gap_missing_products",
+      "kind": "barrier",
+      "evidence_items": 17,
+      "n_sources": 3,
+      "sources": [
+        "play_store",
+        "reddit",
+        "youtube"
+      ],
+      "triangulated": true,
+      "strength": "strong"
+    },
+    {
+      "theme": "prefer_specialist_store_for_category",
+      "kind": "barrier",
+      "evidence_items": 11,
+      "n_sources": 3,
+      "sources": [
+        "play_store",
+        "reddit",
+        "youtube"
+      ],
+      "triangulated": true,
+      "strength": "moderate"
+    },
+    {
+      "theme": "dont_trust_quality_for_new_category",
+      "kind": "barrier",
+      "evidence_items": 9,
+      "n_sources": 3,
+      "sources": [
+        "app_store",
+        "play_store",
+        "reddit"
+      ],
+      "triangulated": true,
+      "strength": "moderate"
+    },
+    {
+      "theme": "price_uncertainty_new_category",
+      "kind": "barrier",
+      "evidence_items": 9,
+      "n_sources": 3,
+      "sources": [
+        "play_store",
+        "reddit",
+        "youtube"
+      ],
+      "triangulated": true,
+      "strength": "moderate"
+    },
+    {
+      "theme": "too_expensive_vs_alternatives",
+      "kind": "barrier",
+      "evidence_items": 8,
+      "n_sources": 3,
+      "sources": [
+        "play_store",
+        "reddit",
+        "youtube"
+      ],
+      "triangulated": true,
+      "strength": "moderate"
+    },
+    {
+      "theme": "hard_to_discover_in_app",
+      "kind": "barrier",
+      "evidence_items": 7,
+      "n_sources": 2,
+      "sources": [
+        "reddit",
+        "youtube"
+      ],
+      "triangulated": true,
+      "strength": "moderate"
+    },
+    {
+      "theme": "cross_sell_worked",
+      "kind": "driver",
+      "evidence_items": 6,
+      "n_sources": 3,
+      "sources": [
+        "play_store",
+        "reddit",
+        "youtube"
+      ],
+      "triangulated": true,
+      "strength": "moderate"
+    },
+    {
+      "theme": "habit_lock_repetitive_buying",
+      "kind": "barrier",
+      "evidence_items": 5,
+      "n_sources": 3,
+      "sources": [
+        "app_store",
+        "reddit",
+        "youtube"
+      ],
+      "triangulated": true,
+      "strength": "weak"
+    },
+    {
+      "theme": "unaware_category_exists",
+      "kind": "barrier",
+      "evidence_items": 5,
+      "n_sources": 3,
+      "sources": [
+        "app_store",
+        "reddit",
+        "youtube"
+      ],
+      "triangulated": true,
+      "strength": "weak"
+    },
+    {
+      "theme": "only_use_for_emergencies",
+      "kind": "barrier",
+      "evidence_items": 5,
+      "n_sources": 4,
+      "sources": [
+        "app_store",
+        "play_store",
+        "reddit",
+        "youtube"
+      ],
+      "triangulated": true,
+      "strength": "weak"
+    },
+    {
+      "theme": "search_only_finds_known_items",
+      "kind": "barrier",
+      "evidence_items": 1,
+      "n_sources": 1,
+      "sources": [
+        "reddit"
+      ],
+      "triangulated": false,
+      "strength": "weak"
+    },
+    {
+      "theme": "poor_recommendations",
+      "kind": "barrier",
+      "evidence_items": 1,
+      "n_sources": 1,
+      "sources": [
+        "reddit"
+      ],
+      "triangulated": false,
+      "strength": "weak"
+    },
+    {
+      "theme": "promo_drove_trial",
+      "kind": "driver",
+      "evidence_items": 1,
+      "n_sources": 1,
+      "sources": [
+        "play_store"
+      ],
+      "triangulated": false,
+      "strength": "weak"
+    },
+    {
+      "theme": "no_reason_to_explore",
+      "kind": "barrier",
+      "evidence_items": 0,
+      "n_sources": 0,
+      "sources": [],
+      "triangulated": false,
+      "strength": "weak"
+    },
+    {
+      "theme": "irrelevant_recommendations",
+      "kind": "barrier",
+      "evidence_items": 0,
+      "n_sources": 0,
+      "sources": [],
+      "triangulated": false,
+      "strength": "weak"
+    },
+    {
+      "theme": "overwhelmed_too_many_options",
+      "kind": "barrier",
+      "evidence_items": 0,
+      "n_sources": 0,
+      "sources": [],
+      "triangulated": false,
+      "strength": "weak"
+    },
+    {
+      "theme": "fast_checkout_no_time_to_browse",
+      "kind": "barrier",
+      "evidence_items": 0,
+      "n_sources": 0,
+      "sources": [],
+      "triangulated": false,
+      "strength": "weak"
+    }
+  ],
+  "per_hypothesis_validation": [
+    {
+      "hypothesis": "In-app discovery friction and low category awareness keep buyers focused only on familiar items they actively search for.",
+      "evidence_items": 64,
+      "n_sources": 4,
+      "sources": [
+        "app_store",
+        "play_store",
+        "reddit",
+        "youtube"
+      ],
+      "source_triangulated": true,
+      "confidence": "high"
+    },
+    {
+      "hypothesis": "Perceived price markups and extra delivery/handling charges create price uncertainty that stops users from testing non-grocery categories.",
+      "evidence_items": 57,
+      "n_sources": 4,
+      "sources": [
+        "app_store",
+        "play_store",
+        "reddit",
+        "youtube"
+      ],
+      "source_triangulated": true,
+      "confidence": "high"
+    },
+    {
+      "hypothesis": "Lack of quality trust and fear of non-refundable defective items prevent expansion into high-value electronics and delicate perishables.",
+      "evidence_items": 57,
+      "n_sources": 4,
+      "sources": [
+        "app_store",
+        "play_store",
+        "reddit",
+        "youtube"
+      ],
+      "source_triangulated": true,
+      "confidence": "high"
+    },
+    {
+      "hypothesis": "Assortment gaps and frequent stockouts in non-grocery categories prevent intent-driven users from completing cross-category purchases.",
+      "evidence_items": 51,
+      "n_sources": 4,
+      "sources": [
+        "app_store",
+        "play_store",
+        "reddit",
+        "youtube"
+      ],
+      "source_triangulated": true,
+      "confidence": "high"
+    },
+    {
+      "hypothesis": "Deeply entrenched habitual re-ordering routines and an 'emergency-only' mental model limit Blinkit to a daily grocery top-up app.",
+      "evidence_items": 30,
+      "n_sources": 4,
+      "sources": [
+        "app_store",
+        "play_store",
+        "reddit",
+        "youtube"
+      ],
+      "source_triangulated": true,
+      "confidence": "high"
+    }
+  ],
+  "triangulation": {
+    "distinct_sources": [
+      "app_store",
+      "play_store",
+      "reddit",
+      "youtube"
+    ],
+    "n_sources": 4,
+    "single_source_themes_flagged_low_confidence": [
+      "search_only_finds_known_items",
+      "poor_recommendations",
+      "promo_drove_trial"
+    ]
+  },
+  "manual_check": {
+    "sample_size": 30,
+    "sample_file": "validation_sample.csv",
+    "accuracy_rate": null,
+    "instructions": "Open validation_sample.csv, fill HUMAN_is_relevant / HUMAN_exploration_signal / AGREE_(Y/N), then compute accuracy = #AGREE / sample_size and record it here."
+  }
+}
