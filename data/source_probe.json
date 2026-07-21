@@ -1,0 +1,21 @@
+{
+  "probed_at": "2026-07-21T19:28:37.689603+00:00",
+  "targets": [
+    {
+      "forum": "trustpilot",
+      "url": "https://www.trustpilot.com/review/blinkit.com",
+      "http_status": 403,
+      "review_bodies_in_raw_html": false,
+      "verdict": "blocked (403 bot wall)"
+    },
+    {
+      "forum": "mouthshut",
+      "url": "https://www.mouthshut.com/product-reviews/blinkit-reviews-925738270",
+      "http_status": 200,
+      "review_bodies_in_raw_html": false,
+      "verdict": "loads but reviews are JS-rendered (not scrapable via requests)"
+    }
+  ],
+  "decision": "DROPPED \u2014 no forum yielded scrapable Blinkit review bodies via a browserless, deploy-safe scraper",
+  "items_captured": 0
+}
