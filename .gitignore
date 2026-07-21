@@ -17,3 +17,5 @@ venv/
 # so the deployed Streamlit app can read them.
 # The rolling log is the one exception:
 data/pipeline.log
+# Scratch per-run logs from ad-hoc/background tagging invocations:
+data/pass1_*.log

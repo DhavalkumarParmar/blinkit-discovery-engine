@@ -141,6 +141,13 @@ class LLMClient:
                 self.stats["groq_requests"] += 1
                 if r.status_code == 429 or r.status_code >= 500:
                     last_err = f"HTTP {r.status_code}: {r.text[:200]}"
+                    # A DAILY cap (tokens/requests per day) won't clear by waiting —
+                    # fail over to the other provider immediately instead of sleeping.
+                    low = r.text.lower()
+                    if "per day" in low or "tpd" in low or "rpd" in low:
+                        log.warning("Groq DAILY limit reached — failing over now (no retry): %s",
+                                    last_err)
+                        raise ProviderExhausted(f"Groq daily limit: {last_err}")
                     log.warning("Groq %s", last_err)
                     self.stats["retries"] += 1
                     _backoff_sleep(attempt, r.headers.get("retry-after"))
@@ -166,6 +173,10 @@ class LLMClient:
         # Schema goes in the prompt (same as Groq) + JSON mime type enforced.
         full_prompt = (f"{system}\n\nRespond ONLY with JSON matching this JSON Schema "
                        f"exactly:\n{json.dumps(schema)}\n\n---\n\n{prompt}")
+        # Gemini 3.x flash is a THINKING model: reasoning tokens are drawn from the
+        # output budget, so a tight max_output_tokens truncates the JSON. Give
+        # generous headroom (thinking + the actual answer both have to fit).
+        out_budget = max(max_tokens * 2, 8192)
         last_err = None
         for attempt in range(MAX_RETRIES):
             try:
@@ -174,7 +185,7 @@ class LLMClient:
                     contents=full_prompt,
                     config={"response_mime_type": "application/json",
                             "temperature": 0.2,
-                            "max_output_tokens": max_tokens},
+                            "max_output_tokens": out_budget},
                 )
                 self.stats["gemini_requests"] += 1
                 return _extract_json(r.text)
