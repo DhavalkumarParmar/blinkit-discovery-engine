@@ -32,6 +32,16 @@ THEMES = [
     "other",
 ]
 
+# Themes that are DRIVERS of exploration (positive), not barriers. Used to split
+# the "top barriers" list from the "what's working" list in synthesis/UI.
+DRIVER_THEMES = {
+    "positive_discovery_experience",
+    "cross_sell_worked",
+    "promo_drove_trial",
+}
+# Barrier themes = everything else except the catch-all "other".
+BARRIER_THEMES = [t for t in THEMES if t not in DRIVER_THEMES and t != "other"]
+
 USER_SEGMENTS = [
     "grocery_only_regular",
     "snack_beverage_buyer",

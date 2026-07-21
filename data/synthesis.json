@@ -1,0 +1,538 @@
+{
+  "generated_at": "2026-07-21T19:56:32.861628+00:00",
+  "framing": "Candidate barriers/drivers with evidence strength — HYPOTHESES, not conclusions. To be screened by survey and refined by interviews.",
+  "aggregates": {
+    "counts": {
+      "total_tagged": 392,
+      "relevant": 90,
+      "irrelevant_filtered": 302,
+      "relevant_pct": 23.0
+    },
+    "barriers": [
+      {
+        "theme": "assortment_gap_missing_products",
+        "count": 17,
+        "pct_of_relevant": 18.9
+      },
+      {
+        "theme": "prefer_specialist_store_for_category",
+        "count": 11,
+        "pct_of_relevant": 12.2
+      },
+      {
+        "theme": "price_uncertainty_new_category",
+        "count": 9,
+        "pct_of_relevant": 10.0
+      },
+      {
+        "theme": "dont_trust_quality_for_new_category",
+        "count": 9,
+        "pct_of_relevant": 10.0
+      },
+      {
+        "theme": "too_expensive_vs_alternatives",
+        "count": 8,
+        "pct_of_relevant": 8.9
+      },
+      {
+        "theme": "hard_to_discover_in_app",
+        "count": 7,
+        "pct_of_relevant": 7.8
+      },
+      {
+        "theme": "only_use_for_emergencies",
+        "count": 5,
+        "pct_of_relevant": 5.6
+      },
+      {
+        "theme": "unaware_category_exists",
+        "count": 5,
+        "pct_of_relevant": 5.6
+      },
+      {
+        "theme": "habit_lock_repetitive_buying",
+        "count": 5,
+        "pct_of_relevant": 5.6
+      },
+      {
+        "theme": "poor_recommendations",
+        "count": 1,
+        "pct_of_relevant": 1.1
+      },
+      {
+        "theme": "search_only_finds_known_items",
+        "count": 1,
+        "pct_of_relevant": 1.1
+      }
+    ],
+    "drivers": [
+      {
+        "theme": "positive_discovery_experience",
+        "count": 23,
+        "pct_of_relevant": 25.6
+      },
+      {
+        "theme": "cross_sell_worked",
+        "count": 6,
+        "pct_of_relevant": 6.7
+      },
+      {
+        "theme": "promo_drove_trial",
+        "count": 1,
+        "pct_of_relevant": 1.1
+      }
+    ],
+    "exploration_signal_distribution": [
+      {
+        "signal": "explored_new_category",
+        "count": 34,
+        "pct_of_all": 8.7
+      },
+      {
+        "signal": "wants_to_explore_but_blocked",
+        "count": 30,
+        "pct_of_all": 7.7
+      },
+      {
+        "signal": "stuck_in_routine",
+        "count": 12,
+        "pct_of_all": 3.1
+      },
+      {
+        "signal": "no_signal",
+        "count": 316,
+        "pct_of_all": 80.6
+      }
+    ],
+    "segments_locked_in": [
+      {
+        "segment": "grocery_only_regular",
+        "count": 14
+      },
+      {
+        "segment": "convenience_first",
+        "count": 12
+      },
+      {
+        "segment": "price_sensitive",
+        "count": 10
+      },
+      {
+        "segment": "multi_category_explorer",
+        "count": 3
+      },
+      {
+        "segment": "daily_topup_buyer",
+        "count": 3
+      },
+      {
+        "segment": "gifting_occasion_buyer",
+        "count": 2
+      },
+      {
+        "segment": "bulk_monthly_stockup",
+        "count": 2
+      },
+      {
+        "segment": "snack_beverage_buyer",
+        "count": 1
+      },
+      {
+        "segment": "new_parent",
+        "count": 1
+      },
+      {
+        "segment": "beauty_personal_care_user",
+        "count": 1
+      },
+      {
+        "segment": "household_essentials_buyer",
+        "count": 1
+      }
+    ],
+    "segments_explorers": [
+      {
+        "segment": "convenience_first",
+        "count": 18
+      },
+      {
+        "segment": "multi_category_explorer",
+        "count": 10
+      },
+      {
+        "segment": "grocery_only_regular",
+        "count": 3
+      },
+      {
+        "segment": "daily_topup_buyer",
+        "count": 3
+      },
+      {
+        "segment": "beauty_personal_care_user",
+        "count": 2
+      },
+      {
+        "segment": "price_sensitive",
+        "count": 2
+      },
+      {
+        "segment": "gifting_occasion_buyer",
+        "count": 2
+      },
+      {
+        "segment": "pet_owner",
+        "count": 1
+      },
+      {
+        "segment": "first_time_user",
+        "count": 1
+      }
+    ],
+    "segments_overall": [
+      {
+        "segment": "convenience_first",
+        "count": 32
+      },
+      {
+        "segment": "grocery_only_regular",
+        "count": 25
+      },
+      {
+        "segment": "price_sensitive",
+        "count": 15
+      },
+      {
+        "segment": "multi_category_explorer",
+        "count": 13
+      },
+      {
+        "segment": "daily_topup_buyer",
+        "count": 7
+      },
+      {
+        "segment": "gifting_occasion_buyer",
+        "count": 5
+      },
+      {
+        "segment": "beauty_personal_care_user",
+        "count": 3
+      },
+      {
+        "segment": "bulk_monthly_stockup",
+        "count": 2
+      },
+      {
+        "segment": "first_time_user",
+        "count": 2
+      },
+      {
+        "segment": "pet_owner",
+        "count": 1
+      },
+      {
+        "segment": "snack_beverage_buyer",
+        "count": 1
+      },
+      {
+        "segment": "new_parent",
+        "count": 1
+      },
+      {
+        "segment": "household_essentials_buyer",
+        "count": 1
+      }
+    ],
+    "categories_mentioned": [
+      {
+        "category": "grocery",
+        "count": 44
+      },
+      {
+        "category": "dairy",
+        "count": 8
+      },
+      {
+        "category": "electronics",
+        "count": 7
+      },
+      {
+        "category": "home",
+        "count": 6
+      },
+      {
+        "category": "stationery",
+        "count": 5
+      },
+      {
+        "category": "beauty",
+        "count": 3
+      },
+      {
+        "category": "gifting",
+        "count": 3
+      },
+      {
+        "category": "pharma",
+        "count": 2
+      },
+      {
+        "category": "personal_care",
+        "count": 2
+      },
+      {
+        "category": "snacks",
+        "count": 2
+      },
+      {
+        "category": "pet",
+        "count": 1
+      }
+    ],
+    "source_distribution": [
+      {
+        "source": "reddit",
+        "count": 39
+      },
+      {
+        "source": "youtube",
+        "count": 22
+      },
+      {
+        "source": "play_store",
+        "count": 18
+      },
+      {
+        "source": "app_store",
+        "count": 11
+      }
+    ]
+  },
+  "locked_in_segments": [
+    {
+      "segment": "grocery_only_regular",
+      "traits": "Uses Blinkit strictly for routine grocery purchases; exhibits strong habitual re-ordering behavior and defaults to familiar items without browsing other categories."
+    },
+    {
+      "segment": "convenience_first",
+      "traits": "Driven by speed and immediate convenience, focusing on rapid checkout for immediate needs rather than exploring non-grocery sections."
+    },
+    {
+      "segment": "price_sensitive",
+      "traits": "Highly conscious of delivery charges, fee markups, and cross-platform price differences, avoiding non-grocery categories due to perceived price inflation."
+    }
+  ],
+  "explorer_segments": [
+    {
+      "segment": "convenience_first",
+      "traits": "Leverages 10-minute delivery for unexpected non-grocery needs such as late-night stationery printouts, emergency home items, and quick gifts."
+    },
+    {
+      "segment": "multi_category_explorer",
+      "traits": "Actively browses and purchases across multiple categories including electronics, beauty, home goods, and stationery."
+    },
+    {
+      "segment": "gifting_occasion_buyer",
+      "traits": "Uses quick commerce for last-minute gifts, festive items, and celebratory surprises."
+    }
+  ],
+  "top_jobs_to_be_done": [
+    {
+      "job": "Order daily groceries and fresh essentials quickly and hassle-free",
+      "approx_count": 44
+    },
+    {
+      "job": "Fulfill urgent emergency needs late at night or during critical time constraints",
+      "approx_count": 15
+    },
+    {
+      "job": "Find niche or specialized non-grocery items delivered in minutes",
+      "approx_count": 12
+    },
+    {
+      "job": "Compare prices across quick-commerce apps to get competitive deals",
+      "approx_count": 10
+    },
+    {
+      "job": "Receive fresh, intact dairy and packaged goods reliably without defects",
+      "approx_count": 9
+    }
+  ],
+  "unmet_needs": [
+    "Transparent and competitive pricing without perceived markups or high handling charges on non-grocery items.",
+    "Greater product assortment depth and consistent stock availability in categories like stationery, home goods, and books.",
+    "Stronger quality assurance and anti-tamper guarantees for high-value electronics and fresh perishables.",
+    "Seamless in-app category discovery and search indexing beyond standard grocery keywords.",
+    "Hassle-free return and replacement policies for non-grocery products such as apparel or electronics."
+  ],
+  "powerful_quotes": [
+    {
+      "quote": "Blinkit is for emergency only",
+      "source": "youtube",
+      "attribution": "@AyonRoy-w8h · 2025-08-27"
+    },
+    {
+      "quote": "Better than local shops",
+      "source": "youtube",
+      "attribution": "@gettruewithnithin · 2026-05-29"
+    },
+    {
+      "quote": "add more rice brands",
+      "source": "play_store",
+      "attribution": "Gayatri Talukdar · 2026-06-30"
+    },
+    {
+      "quote": "Ordering iphone 17 pro",
+      "source": "reddit",
+      "attribution": "kafkasky · 2025-11-30"
+    },
+    {
+      "quote": "best discounts on ps5",
+      "source": "reddit",
+      "attribution": "Comfortable_Bake_585 · 2026-07-01"
+    },
+    {
+      "quote": "Is this cheaper on Zepto?",
+      "source": "reddit",
+      "attribution": "akshat207 · 2025-07-23"
+    },
+    {
+      "quote": "Fed the cat some baby cat food",
+      "source": "reddit",
+      "attribution": "Direct_Possible5245 · 2026-04-27"
+    },
+    {
+      "quote": "BLINKIT is selling home bbq",
+      "source": "reddit",
+      "attribution": "yolo2021bets · 2025-11-24"
+    },
+    {
+      "quote": "inefficient prices",
+      "source": "reddit",
+      "attribution": "Pretend-Map6859 · 2026-05-27"
+    },
+    {
+      "quote": "poor quality",
+      "source": "play_store",
+      "attribution": "ankur sethi · 2026-07-14"
+    }
+  ],
+  "hypotheses": [
+    {
+      "hypothesis": "In-app discovery friction and low category awareness keep buyers focused only on familiar items they actively search for.",
+      "supporting_themes": [
+        "hard_to_discover_in_app",
+        "unaware_category_exists",
+        "search_only_finds_known_items"
+      ],
+      "supporting_signals": [
+        "wants_to_explore_but_blocked",
+        "explored_new_category"
+      ],
+      "rationale": "App navigation barriers (7.8%) and low awareness (5.6%) indicate users often learn about non-grocery services (like printouts or home BBQ equipment) by accident or word-of-mouth rather than intuitive UI discovery.",
+      "evidence_items": 64,
+      "evidence_sources": [
+        "app_store",
+        "play_store",
+        "reddit",
+        "youtube"
+      ],
+      "source_triangulated": true,
+      "confidence": "high"
+    },
+    {
+      "hypothesis": "Perceived price markups and extra delivery/handling charges create price uncertainty that stops users from testing non-grocery categories.",
+      "supporting_themes": [
+        "price_uncertainty_new_category",
+        "too_expensive_vs_alternatives"
+      ],
+      "supporting_signals": [
+        "wants_to_explore_but_blocked",
+        "stuck_in_routine",
+        "no_signal"
+      ],
+      "rationale": "Price uncertainty (10.0%) and high pricing vs alternatives (8.9%) form a significant barrier. Users compare prices with platforms like Zepto, DMart, or local wholesale markets, leading to high hesitation when considering non-grocery items.",
+      "evidence_items": 57,
+      "evidence_sources": [
+        "app_store",
+        "play_store",
+        "reddit",
+        "youtube"
+      ],
+      "source_triangulated": true,
+      "confidence": "high"
+    },
+    {
+      "hypothesis": "Lack of quality trust and fear of non-refundable defective items prevent expansion into high-value electronics and delicate perishables.",
+      "supporting_themes": [
+        "dont_trust_quality_for_new_category",
+        "prefer_specialist_store_for_category"
+      ],
+      "supporting_signals": [
+        "wants_to_explore_but_blocked",
+        "stuck_in_routine",
+        "no_signal"
+      ],
+      "rationale": "Quality distrust (10.0%) and preference for specialist retailers (12.2%) reflect user anxiety regarding damaged packaging, melted items, or tampered electronics with limited customer support accountability.",
+      "evidence_items": 57,
+      "evidence_sources": [
+        "app_store",
+        "play_store",
+        "reddit",
+        "youtube"
+      ],
+      "source_triangulated": true,
+      "confidence": "high"
+    },
+    {
+      "hypothesis": "Assortment gaps and frequent stockouts in non-grocery categories prevent intent-driven users from completing cross-category purchases.",
+      "supporting_themes": [
+        "assortment_gap_missing_products",
+        "prefer_specialist_store_for_category"
+      ],
+      "supporting_signals": [
+        "wants_to_explore_but_blocked",
+        "stuck_in_routine"
+      ],
+      "rationale": "Missing products account for 18.9% of relevant barrier feedback. Users searching for specialized items like specific rice brands, books, or household packaging find empty catalog listings, forcing them back to specialized offline or dedicated e-commerce stores.",
+      "evidence_items": 51,
+      "evidence_sources": [
+        "app_store",
+        "play_store",
+        "reddit",
+        "youtube"
+      ],
+      "source_triangulated": true,
+      "confidence": "high"
+    },
+    {
+      "hypothesis": "Deeply entrenched habitual re-ordering routines and an 'emergency-only' mental model limit Blinkit to a daily grocery top-up app.",
+      "supporting_themes": [
+        "habit_lock_repetitive_buying",
+        "only_use_for_emergencies"
+      ],
+      "supporting_signals": [
+        "stuck_in_routine",
+        "no_signal"
+      ],
+      "rationale": "Habit lock (5.6%) and emergency usage (5.6%) show that users log onto Blinkit with high intent to quickly grab routine items, completing checkout before being exposed to broader category promotion.",
+      "evidence_items": 30,
+      "evidence_sources": [
+        "app_store",
+        "play_store",
+        "reddit",
+        "youtube"
+      ],
+      "source_triangulated": true,
+      "confidence": "high"
+    }
+  ],
+  "llm_stats": {
+    "groq_requests": 1,
+    "gemini_requests": 4,
+    "retries": 3,
+    "fallbacks": 1,
+    "groq_model": "llama-3.3-70b-versatile",
+    "gemini_model": "gemini-3.6-flash"
+  },
+  "rebuilt_at": "2026-07-21T19:59:04.445357+00:00"
+}
