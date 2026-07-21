@@ -1,0 +1,19 @@
+# Secrets — never commit
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS / editor noise
+.DS_Store
+.idea/
+.vscode/
+
+# NOTE: data/ is intentionally NOT ignored — the pre-computed result files
+# (tagged.jsonl, synthesis.json, validation.json, xlsx, …) must be committed
+# so the deployed Streamlit app can read them.
+# The rolling log is the one exception:
+data/pipeline.log

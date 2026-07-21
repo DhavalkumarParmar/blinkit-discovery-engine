@@ -1,0 +1,16 @@
+# Core
+requests>=2.31
+python-dotenv>=1.0
+
+# LLM providers
+# Groq is called via its OpenAI-compatible REST API using `requests` (no SDK needed).
+# Gemini fallback uses the NEW google-genai SDK (NOT the deprecated google-generativeai).
+google-genai>=1.0
+
+# Data / export
+pandas>=2.0
+openpyxl>=3.1
+
+# UI
+streamlit>=1.35
+plotly>=5.20
