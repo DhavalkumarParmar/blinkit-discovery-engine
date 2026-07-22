@@ -117,6 +117,7 @@ merge.py             raw_*.jsonl → merged.jsonl
 pass1_tag.py         per-item tagging (batched · resumable) → tagged.jsonl
 pass2_synthesize.py  deterministic counts + 1 LLM call → synthesis.json/.md
 validate.py          evidence/triangulation/coverage → validation.json + sample.csv
+score_validation.py  read filled sample.csv → write accuracy_rate into validation.json
 export_excel.py      → blinkit_review_analysis.xlsx (3 tabs)
 pipeline.py          admin re-run orchestration · process-global state · metadata
 app.py               Streamlit dashboard (6 tabs) · reads data/

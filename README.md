@@ -59,6 +59,11 @@ Individual steps also run standalone:
 · `python pass2_synthesize.py` (`--rebuild` = recompute deterministic parts, no LLM)
 · `python validate.py` · `python export_excel.py`.
 
+**Manual accuracy check (optional, anytime):** fill the `HUMAN_*` / `AGREE_(Y/N)`
+columns in `data/validation_sample.csv`, then run `python score_validation.py` — it
+computes the agreement rate and writes it into `data/validation.json`; commit & push
+and the dashboard's Validation tab shows it.
+
 ---
 
 ## Providers, models & free-tier quotas (verified live)
