@@ -49,6 +49,7 @@ def analysis_steps(tag_limit: int) -> list:
         ("pass 2 synthesize", [sys.executable, "pass2_synthesize.py"]),
         ("validate", [sys.executable, "validate.py"]),
         ("excel export", [sys.executable, "export_excel.py"]),
+        ("findings report", [sys.executable, "export_report.py"]),
     ]
 
 

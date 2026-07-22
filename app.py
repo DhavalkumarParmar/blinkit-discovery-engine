@@ -171,6 +171,20 @@ PAGES = ["📊 Insights", "🔬 Validation", "🗺️ How it works", "⚡ Live p
          "🧪 Try it live", "🔐 Admin"]
 page = st.sidebar.radio("Navigate", PAGES, label_visibility="collapsed")
 
+# Full findings report — generated live from the committed data so it always
+# matches what's on screen (nothing dropped). For survey/interview next steps.
+try:
+    from export_report import build_report
+    _report_md = build_report(load_json(SYNTH_PATH) or {}, load_json(VALIDATION_PATH) or {},
+                              load_json(META_PATH) or {},
+                              load_json(os.path.join(DATA_DIR, "source_probe.json")))
+    st.sidebar.markdown("---")
+    st.sidebar.download_button("⬇️ Download full findings (.md)", _report_md,
+                              file_name="blinkit_findings_report.md", mime="text/markdown")
+    st.sidebar.caption("Complete report: every barrier, segment, quote, hypothesis & validation.")
+except Exception:  # noqa: BLE001  — never let the report break the nav
+    pass
+
 
 # ─────────────────────────── 1. INSIGHTS ───────────────────────────
 if page == "📊 Insights":

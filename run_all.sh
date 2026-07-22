@@ -46,9 +46,10 @@ $PY pass2_synthesize.py
 echo "▶ [4/5] Validation + human-check sample"
 $PY validate.py
 
-echo "▶ [5/5] Excel export + run metadata"
+echo "▶ [5/5] Excel export + run metadata + full findings report"
 $PY export_excel.py
 $PY -c "from pipeline import _write_metadata; _write_metadata()"
+$PY export_report.py
 
 echo "════════════════════════════════════════════════════════════"
 echo " ✅ Done. Outputs in data/:"

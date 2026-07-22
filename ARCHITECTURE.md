@@ -119,6 +119,7 @@ pass2_synthesize.py  deterministic counts + 1 LLM call → synthesis.json/.md
 validate.py          evidence/triangulation/coverage → validation.json + sample.csv
 score_validation.py  read filled sample.csv → write accuracy_rate into validation.json
 export_excel.py      → blinkit_review_analysis.xlsx (3 tabs)
+export_report.py     → blinkit_findings_report.md (full report; sidebar download)
 pipeline.py          admin re-run orchestration · process-global state · metadata
 app.py               Streamlit dashboard (6 tabs) · reads data/
 run_all.sh           one-command pipeline (merge→tag→synth→validate→excel)
