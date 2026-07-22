@@ -28,9 +28,13 @@ load_dotenv()
 log = get_logger("llm")
 
 GROQ_BASE = "https://api.groq.com/openai/v1"
-# Preference order when GROQ_MODEL is unset; verified against the live /models
+# Rotation pool used when GROQ_MODEL is unset (ordered best-quality first).
+# Each Groq model has its OWN daily token bucket (verified live), so when one is
+# daily-capped we rotate to the next model before ever falling back to Gemini —
+# this multiplies free-tier throughput. Verified against the live /models
 # endpoint at startup so a deprecated ID can never be used silently.
-GROQ_PREFERRED = ["llama-3.3-70b-versatile", "openai/gpt-oss-120b", "llama-3.1-8b-instant"]
+GROQ_ROTATION = ["llama-3.3-70b-versatile", "openai/gpt-oss-120b",
+                 "openai/gpt-oss-20b", "llama-3.1-8b-instant"]
 
 MAX_RETRIES = 5
 TIMEOUT_S = 120
@@ -86,15 +90,22 @@ class LLMClient:
         self.groq_key = os.getenv("GROQ_API_KEY", "")
         self.gemini_key = os.getenv("GEMINI_API_KEY", "")
         self.gemini_model = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
-        self.groq_model = os.getenv("GROQ_MODEL", "") or None  # resolved lazily
+        self.groq_model = os.getenv("GROQ_MODEL", "") or None  # pinned single model, or None
+        self.groq_models: list[str] = []      # resolved rotation pool
+        self._exhausted_groq: set[str] = set()  # models daily-capped this run
         self.stats = {"groq_requests": 0, "gemini_requests": 0, "retries": 0,
-                      "fallbacks": 0, "groq_model": None, "gemini_model": self.gemini_model}
+                      "fallbacks": 0, "model_rotations": 0, "groq_model": None,
+                      "groq_models_used": {}, "gemini_model": self.gemini_model}
+        self.last_model = None  # model that answered the most recent successful call
         self._gemini_client = None
 
     # ── Groq ────────────────────────────────────────────────────────
 
     def verify_groq_model(self) -> str:
-        """Resolve + verify the Groq model ID against the LIVE /models endpoint."""
+        """Resolve + verify the Groq model rotation pool against the LIVE /models
+        endpoint. If GROQ_MODEL is pinned, the pool is just that one model;
+        otherwise it's the live-verified GROQ_ROTATION list. Returns the active
+        (first) model for backward compatibility."""
         if not self.groq_key:
             raise LLMError("GROQ_API_KEY not set")
         r = requests.get(f"{GROQ_BASE}/models",
@@ -102,30 +113,37 @@ class LLMClient:
                          timeout=30)
         r.raise_for_status()
         live = {m["id"]: m for m in r.json()["data"] if m.get("active")}
-        if self.groq_model:
+        if self.groq_model:  # user pinned a single model → no rotation
             if self.groq_model not in live:
                 raise LLMError(f"GROQ_MODEL={self.groq_model!r} is not in the live "
                                f"model list. Active text models: "
                                f"{[m for m in live if 'json_mode' in (live[m].get('supported_features') or [])]}")
+            self.groq_models = [self.groq_model]
         else:
-            for candidate in GROQ_PREFERRED:
-                if candidate in live:
-                    self.groq_model = candidate
-                    break
-            else:
-                raise LLMError("None of the preferred Groq models are live; set GROQ_MODEL manually.")
+            self.groq_models = [m for m in GROQ_ROTATION if m in live]
+            if not self.groq_models:
+                raise LLMError("None of the rotation Groq models are live; set GROQ_MODEL manually.")
+            self.groq_model = self.groq_models[0]
         self.stats["groq_model"] = self.groq_model
-        log.info("Groq model verified live: %s", self.groq_model)
+        log.info("Groq rotation pool verified live: %s", self.groq_models)
         return self.groq_model
 
-    def _groq_json(self, system: str, prompt: str, schema: dict, max_tokens: int) -> dict | list:
-        if not self.groq_model:
-            self.verify_groq_model()
-        # json_object mode requires "JSON" in the messages; we embed the schema.
-        sys_msg = (f"{system}\n\nRespond ONLY with JSON matching this JSON Schema "
-                   f"exactly (no extra keys, no prose):\n{json.dumps(schema)}")
+    def _next_groq_model(self) -> str | None:
+        """First model in the pool that isn't daily-exhausted this run, else None."""
+        for m in self.groq_models:
+            if m not in self._exhausted_groq:
+                return m
+        return None
+
+    class _ModelDailyCap(Exception):
+        """This specific Groq model hit its daily cap — rotate to the next one."""
+
+    def _groq_call_single(self, model: str, sys_msg: str, prompt: str,
+                          max_tokens: int) -> dict | list:
+        """One model's call with retries. Raises _ModelDailyCap on a daily cap
+        (→ rotate) or ProviderExhausted after exhausting transient retries."""
         body = {
-            "model": self.groq_model,
+            "model": model,
             "messages": [{"role": "system", "content": sys_msg},
                          {"role": "user", "content": prompt}],
             "temperature": 0.2,
@@ -141,26 +159,49 @@ class LLMClient:
                 self.stats["groq_requests"] += 1
                 if r.status_code == 429 or r.status_code >= 500:
                     last_err = f"HTTP {r.status_code}: {r.text[:200]}"
-                    # A DAILY cap (tokens/requests per day) won't clear by waiting —
-                    # fail over to the other provider immediately instead of sleeping.
                     low = r.text.lower()
+                    # A DAILY cap won't clear by waiting — rotate to the next model.
                     if "per day" in low or "tpd" in low or "rpd" in low:
-                        log.warning("Groq DAILY limit reached — failing over now (no retry): %s",
-                                    last_err)
-                        raise ProviderExhausted(f"Groq daily limit: {last_err}")
-                    log.warning("Groq %s", last_err)
+                        raise self._ModelDailyCap(last_err)
+                    log.warning("Groq[%s] %s", model, last_err)
                     self.stats["retries"] += 1
                     _backoff_sleep(attempt, r.headers.get("retry-after"))
                     continue
                 r.raise_for_status()
                 content = r.json()["choices"][0]["message"]["content"]
+                self.stats["groq_models_used"][model] = \
+                    self.stats["groq_models_used"].get(model, 0) + 1
+                self.last_model = model
                 return _extract_json(content)
             except (requests.Timeout, requests.ConnectionError) as e:
                 last_err = repr(e)
-                log.warning("Groq network error: %s", last_err)
+                log.warning("Groq[%s] network error: %s", model, last_err)
                 self.stats["retries"] += 1
                 _backoff_sleep(attempt)
-        raise ProviderExhausted(f"Groq failed after {MAX_RETRIES} attempts: {last_err}")
+        raise ProviderExhausted(f"Groq[{model}] failed after {MAX_RETRIES} attempts: {last_err}")
+
+    def _groq_json(self, system: str, prompt: str, schema: dict, max_tokens: int) -> dict | list:
+        if not self.groq_models:
+            self.verify_groq_model()
+        # json_object mode requires "JSON" in the messages; we embed the schema.
+        sys_msg = (f"{system}\n\nRespond ONLY with JSON matching this JSON Schema "
+                   f"exactly (no extra keys, no prose):\n{json.dumps(schema)}")
+        while True:
+            model = self._next_groq_model()
+            if model is None:
+                raise ProviderExhausted("All Groq rotation models are daily-capped: "
+                                        + ", ".join(self.groq_models))
+            try:
+                return self._groq_call_single(model, sys_msg, prompt, max_tokens)
+            except self._ModelDailyCap as cap:
+                self._exhausted_groq.add(model)
+                self.stats["model_rotations"] += 1
+                nxt = self._next_groq_model()
+                self.groq_model = nxt or model
+                self.stats["groq_model"] = self.groq_model
+                log.warning("Groq[%s] daily-capped (%s) — rotating to %s",
+                            model, str(cap)[:80], nxt or "(none left → Gemini)")
+                # loop continues with the next model, or raises ProviderExhausted above
 
     # ── Gemini ──────────────────────────────────────────────────────
 
@@ -188,6 +229,7 @@ class LLMClient:
                             "max_output_tokens": out_budget},
                 )
                 self.stats["gemini_requests"] += 1
+                self.last_model = f"gemini:{self.gemini_model}"
                 return _extract_json(r.text)
             except Exception as e:  # google-genai raises its own ClientError types
                 self.stats["gemini_requests"] += 1

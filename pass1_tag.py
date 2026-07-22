@@ -169,7 +169,9 @@ def tag(limit: int | None = None, batch_size: int = BATCH_SIZE, assume_yes: bool
             orig = by_id.get(r.get("id"))
             if orig is None:
                 continue  # hallucinated / mismatched id
-            append_jsonl(TAGGED_PATH, _coerce(r, orig))
+            row = _coerce(r, orig)
+            row["tagged_by"] = client.last_model  # which model produced this tag
+            append_jsonl(TAGGED_PATH, row)
             matched += 1
             tagged_count += 1
         log.info("Batch %d/%d: %d/%d items tagged (running total %d) | reqs g:%d gem:%d",
