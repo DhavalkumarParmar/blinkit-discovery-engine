@@ -119,6 +119,17 @@ def _build_prompt(batch: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def tag_one_item(client, item: dict) -> dict:
+    """Tag a SINGLE item live (used by the Streamlit live/try-it tabs). Reuses the
+    same schema, system prompt, and coercion as the batch tagger."""
+    out = client.generate_json(_build_prompt([item]), BATCH_SCHEMA,
+                               system=SYSTEM, max_tokens=1536)
+    results = out.get("results", []) if isinstance(out, dict) else []
+    tags = _coerce(results[0], item) if results else _coerce({}, item)
+    tags["tagged_by"] = getattr(client, "last_model", None)
+    return tags
+
+
 def tag(limit: int | None = None, batch_size: int = BATCH_SIZE, assume_yes: bool = False):
     merged = read_jsonl(MERGED_PATH)
     if not merged:
