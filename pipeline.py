@@ -50,6 +50,7 @@ def analysis_steps(tag_limit: int) -> list:
         ("validate", [sys.executable, "validate.py"]),
         ("excel export", [sys.executable, "export_excel.py"]),
         ("findings report", [sys.executable, "export_report.py"]),
+        ("findings pdf", [sys.executable, "export_pdf.py"]),
     ]
 
 

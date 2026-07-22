@@ -10,6 +10,10 @@ google-genai>=1.0
 # Data / export
 pandas>=2.0
 openpyxl>=3.1
+# PDF findings report (charts via matplotlib, layout via reportlab — both
+# pure-Python enough to run on Streamlit Cloud; no headless Chrome needed)
+matplotlib>=3.7
+reportlab>=4.0
 
 # UI
 streamlit>=1.35

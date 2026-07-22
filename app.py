@@ -182,6 +182,17 @@ try:
     st.sidebar.download_button("⬇️ Download full findings (.md)", _report_md,
                               file_name="blinkit_findings_report.md", mime="text/markdown")
     st.sidebar.caption("Complete report: every barrier, segment, quote, hypothesis & validation.")
+
+    # PDF (with charts) — cached so the ~5 matplotlib charts render once per dataset.
+    @st.cache_data(show_spinner=False)
+    def _pdf_bytes(_cache_key):
+        from export_pdf import build_pdf
+        return build_pdf(load_json(SYNTH_PATH) or {}, load_json(VALIDATION_PATH) or {},
+                         load_json(META_PATH) or {})
+    _synth = load_json(SYNTH_PATH) or {}
+    _pdf = _pdf_bytes(_synth.get("generated_at", ""))
+    st.sidebar.download_button("⬇️ Download findings PDF (with charts)", _pdf,
+                              file_name="blinkit_findings_report.pdf", mime="application/pdf")
 except Exception:  # noqa: BLE001  — never let the report break the nav
     pass
 

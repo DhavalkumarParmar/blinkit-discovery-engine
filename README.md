@@ -124,6 +124,7 @@ the four **exploration signals**: `explored_new_category`,
 `merged.jsonl` · `tagged.jsonl` · `synthesis.json` + `synthesis.md` ·
 `validation.json` + `validation_sample.csv` · `blinkit_review_analysis.xlsx` ·
 **`blinkit_findings_report.md`** (complete detailed report — every barrier,
-segment, quote, hypothesis & validation, for the survey/interview next steps;
-also downloadable from the dashboard sidebar) · `last_run_metadata.json` ·
+segment, quote, hypothesis & validation, for the survey/interview next steps) ·
+**`blinkit_findings_report.pdf`** (same findings *with the charts embedded*) —
+both downloadable from the dashboard sidebar · `last_run_metadata.json` ·
 `source_probe.json` · rolling `pipeline.log`.
