@@ -95,6 +95,14 @@ section[data-testid="stSidebar"] * {color:#eaf5ee;}
 section[data-testid="stSidebar"] .stRadio label {font-size:1.02rem; padding:8px 6px;}
 .sidenav-title{font-size:1.15rem;font-weight:800;color:#fff;padding:6px 4px 2px;}
 .sidenav-sub{font-size:.78rem;color:#9fd3b4;padding:0 4px 12px;}
+.export-hd{font-size:.78rem;font-weight:800;letter-spacing:.04em;color:#9fd3b4;padding:4px 4px 6px;}
+/* readable download buttons on the dark sidebar */
+section[data-testid="stSidebar"] .stDownloadButton button{
+  background:#12a150; border:1px solid #0e8442; border-radius:8px; width:100%;
+  font-weight:700; padding:8px 10px;}
+section[data-testid="stSidebar"] .stDownloadButton button *{color:#ffffff !important;}
+section[data-testid="stSidebar"] .stDownloadButton button:hover{
+  background:#0e8442; border-color:#0b6b3a;}
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
@@ -178,11 +186,6 @@ try:
     _report_md = build_report(load_json(SYNTH_PATH) or {}, load_json(VALIDATION_PATH) or {},
                               load_json(META_PATH) or {},
                               load_json(os.path.join(DATA_DIR, "source_probe.json")))
-    st.sidebar.markdown("---")
-    st.sidebar.download_button("⬇️ Download full findings (.md)", _report_md,
-                              file_name="blinkit_findings_report.md", mime="text/markdown")
-    st.sidebar.caption("Complete report: every barrier, segment, quote, hypothesis & validation.")
-
     # PDF (with charts) — cached so the ~5 matplotlib charts render once per dataset.
     @st.cache_data(show_spinner=False)
     def _pdf_bytes(_cache_key):
@@ -191,8 +194,14 @@ try:
                          load_json(META_PATH) or {})
     _synth = load_json(SYNTH_PATH) or {}
     _pdf = _pdf_bytes(_synth.get("generated_at", ""))
-    st.sidebar.download_button("⬇️ Download findings PDF (with charts)", _pdf,
+
+    st.sidebar.markdown("---")
+    st.sidebar.markdown('<div class="export-hd">📥 EXPORT FINDINGS</div>', unsafe_allow_html=True)
+    st.sidebar.download_button("Markdown  ·  .md", _report_md,
+                              file_name="blinkit_findings_report.md", mime="text/markdown")
+    st.sidebar.download_button("PDF with charts  ·  .pdf", _pdf,
                               file_name="blinkit_findings_report.pdf", mime="application/pdf")
+    st.sidebar.caption("Full report — every barrier, segment, quote, hypothesis & validation.")
 except Exception:  # noqa: BLE001  — never let the report break the nav
     pass
 
