@@ -31,8 +31,11 @@ and a validation layer.
      coverage/ambiguity rate, 30-item human-check CSV.
    - **Excel** — `blinkit_review_analysis.xlsx` (Tagged Reviews / Insights /
      Validation), screenshot-ready.
-3. **Streamlit dashboard** (5 tabs) reading pre-computed files — deploys to
+3. **Streamlit dashboard** (6 tabs) reading pre-computed files — deploys to
    Streamlit Community Cloud.
+
+📐 See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the full ASCII system diagram
+(also rendered live in the dashboard's **🗺️ How it works** tab).
 
 ---
 

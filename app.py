@@ -30,7 +30,7 @@ for _k in ("GROQ_API_KEY", "GEMINI_API_KEY", "YOUTUBE_API_KEY", "ADMIN_PASSWORD"
     except Exception:
         pass
 
-from common import DATA_DIR, LOG_PATH, read_jsonl  # noqa: E402
+from common import DATA_DIR, LOG_PATH, PROJECT_ROOT, read_jsonl  # noqa: E402
 
 SYNTH_PATH = os.path.join(DATA_DIR, "synthesis.json")
 VALIDATION_PATH = os.path.join(DATA_DIR, "validation.json")
@@ -157,7 +157,8 @@ def render_tags(tags: dict):
 st.sidebar.markdown('<div class="sidenav-title">🛒 Discovery Engine</div>'
                     '<div class="sidenav-sub">Blinkit category-exploration barriers</div>',
                     unsafe_allow_html=True)
-PAGES = ["📊 Insights", "🔬 Validation", "⚡ Live pipeline", "🧪 Try it live", "🔐 Admin"]
+PAGES = ["📊 Insights", "🔬 Validation", "🗺️ How it works", "⚡ Live pipeline",
+         "🧪 Try it live", "🔐 Admin"]
 page = st.sidebar.radio("Navigate", PAGES, label_visibility="collapsed")
 
 
@@ -373,6 +374,34 @@ elif page == "🔬 Validation":
         ss = v["triangulation"]["single_source_themes_flagged_low_confidence"]
         if ss:
             st.warning("Single-source themes flagged lower-confidence: " + ", ".join(ss))
+
+
+# ─────────────────────── 2b. HOW IT WORKS ──────────────────────────
+elif page == "🗺️ How it works":
+    st.subheader("🗺️ How it works — system architecture")
+    st.caption("End-to-end: multi-source scrapers → two-pass AI analysis → validation "
+               "→ Excel → this dashboard. Flat files, no database.")
+    meta = load_json(META_PATH) or {}
+    if meta:
+        mc = st.columns(4)
+        mc[0].metric("Sources", len(meta.get("per_source", {})))
+        mc[1].metric("Merged items", f'{meta.get("total_merged", 0):,}')
+        mc[2].metric("AI-tagged", f'{meta.get("total_tagged", 0):,}')
+        mc[3].metric("Groq models used", len([k for k in meta.get("tagged_by_model", {})
+                                              if k not in ("unknown",)]))
+    arch_path = os.path.join(PROJECT_ROOT, "ARCHITECTURE.md")
+    if os.path.exists(arch_path):
+        with open(arch_path, encoding="utf-8") as f:
+            st.markdown(f.read())
+    else:
+        st.info("ARCHITECTURE.md not found in the repo.")
+    if meta.get("tagged_by_model"):
+        st.subheader("Tagging load spread across models (free-tier rotation)")
+        mm = meta["tagged_by_model"]
+        figm = go.Figure(go.Bar(x=list(mm.values()), y=list(mm.keys()), orientation="h",
+                                marker_color="#12a150", text=list(mm.values()), textposition="auto"))
+        figm.update_layout(height=240, margin=dict(l=10, r=10, t=10, b=10), plot_bgcolor="#fff")
+        st.plotly_chart(figm, width="stretch")
 
 
 # ───────────────────────── 3. LIVE PIPELINE ────────────────────────
