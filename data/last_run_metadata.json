@@ -1,0 +1,28 @@
+{
+  "generated_at": "2026-07-22T07:37:57.058972+00:00",
+  "per_source": {
+    "app_store": 479,
+    "play_store": 500,
+    "reddit": 913,
+    "youtube": 411
+  },
+  "total_merged": 2303,
+  "total_tagged": 1303,
+  "tagged_by_model": {
+    "unknown": 392,
+    "llama-3.3-70b-versatile": 104,
+    "openai/gpt-oss-120b": 406,
+    "openai/gpt-oss-20b": 337,
+    "llama-3.1-8b-instant": 64
+  },
+  "llm_stats": {
+    "groq_requests": 0,
+    "gemini_requests": 1,
+    "retries": 0,
+    "fallbacks": 0,
+    "model_rotations": 0,
+    "groq_model": null,
+    "groq_models_used": {},
+    "gemini_model": "gemini-3.6-flash"
+  }
+}
