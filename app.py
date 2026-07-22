@@ -418,39 +418,93 @@ elif page == "🗺️ How it works":
 elif page == "⚡ Live pipeline":
     import datetime as dt
     import traceback
-    st.subheader("⚡ Live pipeline demo — fresh Play Store reviews, tagged in real time")
+    st.subheader("⚡ Live pipeline demo — fresh reviews, tagged in real time")
     st.caption("Watch the real mechanism run on a tiny live sample: **scrape → tag → roll up**. "
-               "It fetches a few fresh Google Play reviews and tags each with one live LLM call. "
-               "This is NOT the full pipeline — just a live proof on 5 items.")
-    n_items = st.slider("How many fresh reviews to demo", 3, 8, 5)
+               "Pick a source and a focus, and it fetches matching fresh reviews and tags each "
+               "with one live LLM call. This is NOT the full pipeline — just a live proof.")
+
+    cc = st.columns([1, 1.4, 1])
+    source = cc[0].selectbox("Source", ["Google Play", "App Store"])
+    focus = cc[1].selectbox(
+        "Focus (what kind of reviews to pull)",
+        ["Category-exploration mentions", "Positive (4–5★)", "Critical (1–2★)", "Most recent (any)"],
+        help="'Category-exploration mentions' surfaces reviews about pet/baby/beauty/"
+             "electronics/trying new things — the ones that produce the richest tags.")
+    n_items = cc[2].slider("How many", 3, 8, 5)
+
+    # SPECIFIC product-category nouns (kept tight on purpose: generic words like
+    # "tried"/"first time" match delivery complaints, not real category talk).
+    EXPLORE_KW = ["pet food", "dog food", "cat food", "pet ", "baby", "diaper", "makeup",
+                  "cosmetic", "lipstick", "beauty", "skincare", "shampoo", "perfume",
+                  "grooming", "electronic", "gadget", "charger", "earphone", "headphone",
+                  "toy", "stationery", "medicine", "pharmacy", "supplement", "jewellery",
+                  "jewelry", "appliance", "personal care"]
+
+    def _match(it, foc):
+        if it is None or len((it.get("text") or "")) < 30:
+            return False
+        r = it.get("rating")
+        if foc == "Positive (4–5★)":
+            return isinstance(r, int) and r >= 4
+        if foc == "Critical (1–2★)":
+            return isinstance(r, int) and r <= 2
+        if foc == "Category-exploration mentions":
+            t = it["text"].lower()
+            return any(k in t for k in EXPLORE_KW)
+        return True
+
+    def _fetch_matching(src, foc, n, sa):
+        """Fetch across pages until n reviews match the focus (or pages run out)."""
+        found, scanned = [], 0
+        if src == "App Store":
+            from scrapers.app_store import fetch_page, normalize
+            for page in range(1, 8):
+                entries = fetch_page(page)
+                if not entries:
+                    break
+                for e in entries:
+                    scanned += 1
+                    it = normalize(e, sa)
+                    if _match(it, foc):
+                        found.append(it)
+                    if len(found) >= n:
+                        return found, scanned
+        else:
+            from scrapers.play_store import fetch_page, normalize
+            token = None
+            for _ in range(8):
+                raw, token = fetch_page(token)
+                if not raw:
+                    break
+                for rv in raw:
+                    scanned += 1
+                    it = normalize(rv, sa)
+                    if _match(it, foc):
+                        found.append(it)
+                    if len(found) >= n:
+                        return found, scanned
+                if not token:
+                    break
+        return found, scanned
 
     if st.button("▶️ Run live demo", key="livebtn", type="primary"):
         # ── STEP 1 · SCRAPE ────────────────────────────────────────
         items = []
-        with st.status("🛰️ Step 1 · Scraping fresh reviews from Google Play…",
+        with st.status(f"🛰️ Step 1 · Scraping fresh **{focus}** reviews from {source}…",
                        expanded=True) as s1:
             try:
-                from scrapers.play_store import fetch_page, normalize, APP_URL  # noqa: F401
                 sa = dt.datetime.now(dt.timezone.utc).isoformat()
-                st.write("→ Calling Google Play's review endpoint…")
-                raw, _ = fetch_page(None)
-                st.write(f"→ Endpoint returned **{len(raw)}** raw reviews. Normalizing…")
-                for rv in raw:
-                    it = normalize(rv, sa)
-                    if it and len(it["text"]) > 30:
-                        items.append(it)
-                    if len(items) >= n_items:
-                        break
+                st.write(f"→ Calling {source}'s review endpoint and filtering for *{focus}*…")
+                items, scanned = _fetch_matching(source, focus, n_items, sa)
+                st.write(f"→ Scanned **{scanned}** reviews, matched **{len(items)}**.")
                 if not items:
-                    s1.update(label="Step 1 · No reviews returned (source/network issue)",
-                              state="error")
-                    st.warning("Couldn't fetch reviews right now — try again in a moment.")
+                    s1.update(label="Step 1 · No matching reviews found", state="error")
+                    st.warning("No reviews matched that focus right now — try another focus/source.")
                     st.stop()
-                st.write(f"✅ Captured **{len(items)}** fresh reviews:")
                 for i, it in enumerate(items, 1):
                     st.markdown(f'<div class="card"><b>#{i}</b> · ★{it["rating"]} · {it["date"]}'
                                 f'<br>{it["text"][:220]}…</div>', unsafe_allow_html=True)
-                s1.update(label=f"✅ Step 1 · Scraped {len(items)} fresh Play Store reviews",
+                s1.update(label=f"✅ Step 1 · Scraped {len(items)} '{focus}' reviews from {source}",
                           state="complete", expanded=True)
             except Exception as e:  # noqa: BLE001
                 s1.update(label="Step 1 · Scrape failed", state="error")
@@ -474,18 +528,22 @@ elif page == "⚡ Live pipeline":
                 st.stop()
             prog = st.progress(0.0)
             for i, it in enumerate(items, 1):
-                st.markdown(f'**Review #{i}** — tagging…')
+                head = st.empty()
+                head.markdown(f'**Review #{i}** — 🏷️ tagging… ⏳')
+                st.caption(f'★{it["rating"]} · {it["text"][:160]}…')
                 try:
                     tags = tag_one_item(client, it)
+                    head.markdown(f'**Review #{i}** — ✅ tagged')
                     render_tags(tags)
                     sig = tags["exploration_signal"]
                     rollup[sig] = rollup.get(sig, 0) + 1
                     tagged_live.append(tags)
                 except Exception as e:  # noqa: BLE001
-                    st.warning(f"Review #{i} couldn't be tagged live ({e}). "
-                               "Likely today's free-tier quota — skipping.")
+                    head.markdown(f'**Review #{i}** — ⚠️ skipped')
+                    st.warning(f"Couldn't be tagged live ({e}). Likely today's free-tier quota.")
                 prog.progress(i / len(items))
                 st.divider()
+            prog.empty()
             state = "complete" if tagged_live else "error"
             s2.update(label=f"{'✅' if tagged_live else '⚠️'} Step 2 · Tagged "
                       f"{len(tagged_live)}/{len(items)} reviews live", state=state, expanded=True)
