@@ -72,6 +72,23 @@ CSS = """
 .hyp .meta {font-size:.8rem;color:#556;margin-top:6px;}
 .jtbd {background:#f3f6fb;border-radius:8px;padding:8px 14px;margin-bottom:6px;font-size:.92rem;}
 small.muted{color:#889;}
+/* KPI cards */
+.kpi {border-radius:14px; padding:16px 18px; color:#fff; height:100%;
+  box-shadow:0 2px 8px rgba(20,40,80,.10);}
+.kpi .v {font-size:2.0rem; font-weight:800; line-height:1.05;}
+.kpi .l {font-size:.80rem; font-weight:600; opacity:.95; margin-top:4px;}
+.kpi .s {font-size:.72rem; opacity:.85; margin-top:2px;}
+.opp {background:#fff;border:1px solid #e6e9ef;border-top:4px solid #12a150;border-radius:12px;
+  padding:14px 16px;height:100%;}
+.opp h4{margin:0 0 4px;color:#0b6b3a;text-transform:capitalize;}
+.opp .b{font-size:.8rem;color:#b03030;}
+.exp {background:#fffdf5;border:1px solid #f0e4c0;border-left:4px solid #e0a800;border-radius:10px;
+  padding:12px 15px;margin-bottom:10px;}
+.exp .lv{font-weight:700;color:#7a5c00;}
+.surprise{background:#f4f0fb;border-left:4px solid #7c4dff;border-radius:10px;padding:10px 15px;margin-bottom:8px;}
+.exec{background:linear-gradient(180deg,#f6fbf8,#eef7f1);border:1px solid #d5e8dc;
+  border-radius:10px;padding:11px 16px;margin-bottom:8px;font-size:1.0rem;color:#0d3a24;}
+.exec b{color:#0b6b3a;}
 /* vertical left-side nav */
 section[data-testid="stSidebar"] {background:#0b2e1e; min-width:250px;}
 section[data-testid="stSidebar"] * {color:#eaf5ee;}
@@ -97,6 +114,21 @@ def badge(text, color):
 
 def pills(items, kind="theme"):
     return "".join(f'<span class="pill">{i}</span>' for i in items) or '<small class="muted">—</small>'
+
+
+def kpi(col, value, label, sub="", color="#12a150"):
+    col.markdown(f'<div class="kpi" style="background:{color}"><div class="v">{value}</div>'
+                 f'<div class="l">{label}</div><div class="s">{sub}</div></div>',
+                 unsafe_allow_html=True)
+
+
+def donut(labels, values, colors, height=270):
+    fig = go.Figure(go.Pie(labels=labels, values=values, hole=0.58,
+                           marker_colors=colors, sort=False,
+                           textinfo="label+percent", textposition="outside"))
+    fig.update_layout(height=height, margin=dict(l=10, r=10, t=10, b=10),
+                      showlegend=False)
+    return fig
 
 
 def render_tags(tags: dict):
@@ -144,38 +176,107 @@ if page == "📊 Insights":
           unsafe_allow_html=True)
         st.caption("⚠️ " + s["framing"])
 
-        k1, k2, k3, k4 = st.columns(4)
+        # ── KPI CARD ROW ──────────────────────────────────────────
         dist = {d["signal"]: d for d in a["exploration_signal_distribution"]}
-        k1.metric("Stuck in routine", dist.get("stuck_in_routine", {}).get("count", 0))
-        k2.metric("Want to explore — blocked", dist.get("wants_to_explore_but_blocked", {}).get("count", 0))
-        k3.metric("Explored new category", dist.get("explored_new_category", {}).get("count", 0))
-        k4.metric("Relevant items", c["relevant"])
+        n_src = len(meta.get("per_source", {})) or len(a.get("source_distribution", []))
+        merged_n = next((f["count"] for f in s.get("funnel", []) if f["stage"] == "Merged items"),
+                        c["total_tagged"])
+        r1 = st.columns(3)
+        kpi(r1[0], f'{merged_n:,}', "Reviews collected", f'across {n_src} sources', "#0b6b3a")
+        kpi(r1[1], f'{c["total_tagged"]:,}', "AI-tagged items", "two-pass LLM analysis", "#12a150")
+        kpi(r1[2], f'{c["relevant"]} · {c["relevant_pct"]}%', "Category-relevant",
+            f'{c["irrelevant_filtered"]} filtered as noise', "#3a7bd5")
+        st.write("")
+        r2 = st.columns(3)
+        kpi(r2[0], dist.get("stuck_in_routine", {}).get("count", 0), "🔁 Stuck in routine",
+            "same categories, repeat buys", "#d73027")
+        kpi(r2[1], dist.get("wants_to_explore_but_blocked", {}).get("count", 0),
+            "🚧 Want to explore — blocked", "intent exists, friction stops it", "#f39c12")
+        kpi(r2[2], dist.get("explored_new_category", {}).get("count", 0), "✅ Explored new category",
+            "actually crossed over", "#1a9850")
 
-        st.subheader("Top barriers to category exploration")
-        bars = a["barriers"][:8][::-1]
-        fig = go.Figure(go.Bar(
-            x=[b["pct_of_relevant"] for b in bars], y=[b["theme"] for b in bars],
-            orientation="h", marker_color="#d73027",
-            text=[f"{b['pct_of_relevant']}% ({b['count']})" for b in bars], textposition="auto"))
-        fig.update_layout(height=340, margin=dict(l=10, r=10, t=10, b=10),
-                          xaxis_title="% of relevant items", plot_bgcolor="#fff")
-        st.plotly_chart(fig, width="stretch")
+        # ── EXECUTIVE SUMMARY ─────────────────────────────────────
+        if s.get("executive_summary"):
+            st.subheader("Executive summary")
+            for e in s["executive_summary"]:
+                st.markdown(f'<div class="exec">▸ {e}</div>', unsafe_allow_html=True)
 
-        col_a, col_b = st.columns(2)
-        with col_a:
+        # ── FUNNEL + SIGNAL DONUT ─────────────────────────────────
+        fc1, fc2 = st.columns([1.3, 1])
+        with fc1:
+            st.subheader("From raw feedback → exploration signal")
+            fn = s.get("funnel", [])
+            if fn:
+                ff = go.Figure(go.Funnel(y=[f["stage"] for f in fn], x=[f["count"] for f in fn],
+                                         marker_color=["#0b6b3a", "#12a150", "#3a7bd5", "#f39c12", "#1a9850"],
+                                         textinfo="value+percent initial"))
+                ff.update_layout(height=300, margin=dict(l=10, r=10, t=10, b=10))
+                st.plotly_chart(ff, width="stretch")
+        with fc2:
             st.subheader("Exploration-signal mix")
-            sig_bars = [d for d in a["exploration_signal_distribution"] if d["signal"] != "no_signal"]
-            fig2 = go.Figure(go.Bar(
-                x=[d["signal"] for d in sig_bars], y=[d["count"] for d in sig_bars],
-                marker_color=[SIGNAL_COLOR[d["signal"]] for d in sig_bars],
-                text=[d["count"] for d in sig_bars], textposition="auto"))
-            fig2.update_layout(height=280, margin=dict(l=10, r=10, t=10, b=10), plot_bgcolor="#fff")
-            st.plotly_chart(fig2, width="stretch")
-        with col_b:
-            st.subheader("What's working (drivers)")
-            for d in a.get("drivers", [])[:5]:
-                st.markdown(f'<div class="jtbd">✅ <b>{d["theme"]}</b> — {d["count"]} items '
-                            f'({d["pct_of_relevant"]}%)</div>', unsafe_allow_html=True)
+            sd = a["exploration_signal_distribution"]
+            st.plotly_chart(donut([d["signal"].replace("_", " ") for d in sd],
+                                  [d["count"] for d in sd],
+                                  [SIGNAL_COLOR[d["signal"]] for d in sd], height=300),
+                            width="stretch")
+
+        # ── BARRIERS + CATEGORY MENTIONS ──────────────────────────
+        bc1, bc2 = st.columns(2)
+        with bc1:
+            st.subheader("Top barriers to exploration")
+            bars = a["barriers"][:8][::-1]
+            fig = go.Figure(go.Bar(x=[b["pct_of_relevant"] for b in bars], y=[b["theme"] for b in bars],
+                orientation="h", marker_color="#d73027",
+                text=[f'{b["pct_of_relevant"]}% ({b["count"]})' for b in bars], textposition="auto"))
+            fig.update_layout(height=340, margin=dict(l=10, r=10, t=10, b=10),
+                              xaxis_title="% of relevant", plot_bgcolor="#fff")
+            st.plotly_chart(fig, width="stretch")
+        with bc2:
+            st.subheader("Which categories users talk about")
+            cm = a.get("categories_mentioned", [])[:8][::-1]
+            if cm:
+                figc = go.Figure(go.Bar(x=[m["count"] for m in cm], y=[m["category"] for m in cm],
+                    orientation="h", marker_color="#3a7bd5",
+                    text=[m["count"] for m in cm], textposition="auto"))
+                figc.update_layout(height=340, margin=dict(l=10, r=10, t=10, b=10), plot_bgcolor="#fff")
+                st.plotly_chart(figc, width="stretch")
+
+        # ── SENTIMENT DONUT + SIGNAL BY SOURCE + DRIVERS ──────────
+        sc1, sc2 = st.columns([1, 1.3])
+        with sc1:
+            st.subheader("Sentiment (relevant)")
+            snt = a.get("sentiment_distribution", [])
+            if snt:
+                st.plotly_chart(donut([d["sentiment"] for d in snt], [d["count"] for d in snt],
+                                      [SENTIMENT_COLOR[d["sentiment"]] for d in snt], height=260),
+                                width="stretch")
+        with sc2:
+            st.subheader("Where exploration signal shows up (by source)")
+            sbs = a.get("signal_by_source", [])
+            if sbs:
+                figs = go.Figure()
+                for sig in ["explored_new_category", "wants_to_explore_but_blocked",
+                            "stuck_in_routine"]:
+                    figs.add_bar(name=sig.replace("_", " "), x=[r["source"] for r in sbs],
+                                 y=[r.get(sig, 0) for r in sbs], marker_color=SIGNAL_COLOR[sig])
+                figs.update_layout(barmode="stack", height=260, margin=dict(l=10, r=10, t=10, b=10),
+                                   legend=dict(orientation="h", y=-0.2), plot_bgcolor="#fff")
+                st.plotly_chart(figs, width="stretch")
+
+        st.subheader("What's working (drivers of exploration)")
+        dcols = st.columns(3)
+        for i, d in enumerate(a.get("drivers", [])[:3]):
+            kpi(dcols[i], f'{d["count"]}', f'✅ {d["theme"]}', f'{d["pct_of_relevant"]}% of relevant', "#1a9850")
+
+        # ── CATEGORY OPPORTUNITIES ────────────────────────────────
+        if s.get("category_opportunities"):
+            st.subheader("Category-specific growth opportunities")
+            ocols = st.columns(len(s["category_opportunities"]))
+            for i, co in enumerate(s["category_opportunities"]):
+                ocols[i].markdown(f'<div class="opp"><h4>{co["category"]}</h4>'
+                                  f'<div class="b">⛔ {co["barrier"]}</div>'
+                                  f'<div style="margin-top:6px">🚀 {co["opportunity"]}</div></div>',
+                                  unsafe_allow_html=True)
 
         st.subheader("Segments: locked-in vs. natural explorers")
         cols = st.columns(2)
@@ -200,6 +301,19 @@ if page == "📊 Insights":
             st.subheader("Top unmet needs")
             for u in s["unmet_needs"]:
                 st.markdown(f'<div class="jtbd">🔎 {u}</div>', unsafe_allow_html=True)
+
+        if s.get("recommended_experiments"):
+            st.subheader("Recommended experiments to drive exploration")
+            st.caption("Levers to TEST — framed as hypotheses for the downstream survey/experiments, not asserted wins.")
+            for ex in s["recommended_experiments"]:
+                st.markdown(f'<div class="exp"><span class="lv">🧪 {ex["lever"]}</span> '
+                            f'<small class="muted">(targets: {ex["targets_barrier"]})</small><br>{ex["hypothesis"]}</div>',
+                            unsafe_allow_html=True)
+
+        if s.get("surprising_insights"):
+            st.subheader("Surprising / counter-intuitive")
+            for si in s["surprising_insights"]:
+                st.markdown(f'<div class="surprise">💡 {si}</div>', unsafe_allow_html=True)
 
         st.subheader("Most powerful quotes")
         qc = st.columns(2)

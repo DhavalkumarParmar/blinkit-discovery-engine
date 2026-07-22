@@ -69,6 +69,34 @@ def compute_aggregates(tagged: list[dict], relevant: list[dict]) -> dict:
     cat_counts = Counter(c for it in relevant for c in it["mentions_category"] if c != "other")
     src_counts = Counter(it["source"] for it in relevant)
 
+    # Sentiment + confidence distributions (over relevant items).
+    sent_counts = Counter(it["sentiment"] for it in relevant)
+    conf_counts = Counter(it["confidence"] for it in relevant)
+
+    # Star-rating distribution (only app_store / play_store carry ratings).
+    rating_counts = Counter(it["rating"] for it in tagged
+                            if isinstance(it.get("rating"), int))
+    rating_dist = [{"rating": r, "count": rating_counts.get(r, 0)} for r in range(1, 6)]
+
+    # exploration_signal broken down BY SOURCE (which sources surface exploration).
+    sig_by_source: dict[str, Counter] = {}
+    for it in tagged:
+        sig_by_source.setdefault(it["source"], Counter())[it["exploration_signal"]] += 1
+    signal_by_source = [{"source": src, **{s: cnt.get(s, 0) for s in EXPLORATION_SIGNALS}}
+                        for src, cnt in sorted(sig_by_source.items())]
+
+    # exploration_signal by SEGMENT (relevant items; which segments are stuck vs exploring).
+    seg_sig: dict[str, Counter] = {}
+    for it in relevant:
+        for seg in it["user_segment_signals"]:
+            seg_sig.setdefault(seg, Counter())[it["exploration_signal"]] += 1
+    signal_by_segment = sorted(
+        [{"segment": seg,
+          "stuck": cnt.get("stuck_in_routine", 0) + cnt.get("wants_to_explore_but_blocked", 0),
+          "explored": cnt.get("explored_new_category", 0),
+          "total": sum(cnt.values())} for seg, cnt in seg_sig.items()],
+        key=lambda x: x["total"], reverse=True)[:8]
+
     return {
         "counts": {"total_tagged": n_all, "relevant": n_rel,
                    "irrelevant_filtered": n_all - n_rel,
@@ -76,6 +104,13 @@ def compute_aggregates(tagged: list[dict], relevant: list[dict]) -> dict:
         "barriers": barriers,
         "drivers": drivers,
         "exploration_signal_distribution": signal_dist,
+        "sentiment_distribution": [{"sentiment": s, "count": sent_counts.get(s, 0)}
+                                   for s in ["positive", "negative", "mixed", "neutral"]],
+        "confidence_distribution": [{"confidence": c, "count": conf_counts.get(c, 0)}
+                                    for c in ["high", "medium", "low"]],
+        "rating_distribution": rating_dist,
+        "signal_by_source": signal_by_source,
+        "signal_by_segment": signal_by_segment,
         "segments_locked_in": [{"segment": s, "count": c} for s, c in locked.most_common()],
         "segments_explorers": [{"segment": s, "count": c} for s, c in explorer.most_common()],
         "segments_overall": [{"segment": s, "count": c} for s, c in seg_overall.most_common()],
@@ -110,6 +145,16 @@ def _derive_confidence(ev: dict) -> str:
 SYNTH_SCHEMA = {
     "type": "object",
     "properties": {
+        "executive_summary": {"type": "array", "items": {"type": "string"}},
+        "category_opportunities": {"type": "array", "items": {"type": "object", "properties": {
+            "category": {"type": "string"}, "barrier": {"type": "string"},
+            "opportunity": {"type": "string"}},
+            "required": ["category", "barrier", "opportunity"]}},
+        "recommended_experiments": {"type": "array", "items": {"type": "object", "properties": {
+            "lever": {"type": "string"}, "hypothesis": {"type": "string"},
+            "targets_barrier": {"type": "string"}},
+            "required": ["lever", "hypothesis", "targets_barrier"]}},
+        "surprising_insights": {"type": "array", "items": {"type": "string"}},
         "locked_in_segments": {"type": "array", "items": {"type": "object", "properties": {
             "segment": {"type": "string"}, "traits": {"type": "string"}},
             "required": ["segment", "traits"]}},
@@ -130,8 +175,9 @@ SYNTH_SCHEMA = {
             "rationale": {"type": "string"}},
             "required": ["hypothesis", "supporting_themes", "supporting_signals", "rationale"]}},
     },
-    "required": ["locked_in_segments", "explorer_segments", "top_jobs_to_be_done",
-                 "unmet_needs", "powerful_quotes", "hypotheses"],
+    "required": ["executive_summary", "category_opportunities", "recommended_experiments",
+                 "surprising_insights", "locked_in_segments", "explorer_segments",
+                 "top_jobs_to_be_done", "unmet_needs", "powerful_quotes", "hypotheses"],
 }
 
 SYSTEM = (
@@ -145,7 +191,17 @@ SYSTEM = (
     "verbatim, include their source+attribution). Give 3-5 hypotheses about the "
     "barriers to category exploration; for EACH, list the supporting_themes and "
     "supporting_signals (from the controlled vocab) that back it, so evidence can be "
-    "counted. Use only allowed enum values for those tag lists."
+    "counted. Use only allowed enum values for those tag lists.\n"
+    "ALSO produce, for a PM dashboard:\n"
+    "- executive_summary: 4-5 punchy one-sentence headline takeaways a PM would put "
+    "on slide 1.\n"
+    "- category_opportunities: for 3-4 specific NEW categories users under-explore "
+    "(pet, baby, beauty, personal_care, electronics, home, pharma), the main barrier "
+    "and the concrete growth opportunity.\n"
+    "- recommended_experiments: 3-4 PM levers Blinkit could TEST to drive exploration; "
+    "each with the lever, a testable hypothesis (framed for a survey/experiment to "
+    "validate, not asserted), and which barrier it targets.\n"
+    "- surprising_insights: 2-3 counter-intuitive or non-obvious findings from the data."
 )
 
 
@@ -158,9 +214,10 @@ def build_llm_prompt(agg: dict, relevant: list[dict], quote_candidates: list[dic
                 "root_cause": it["frustration_root_cause"]} for it in items]
     return (
         "DETERMINISTIC AGGREGATES (already counted — do not recount):\n"
-        + json.dumps({k: agg[k] for k in ["counts", "barriers",
-             "exploration_signal_distribution", "segments_locked_in",
-             "segments_explorers", "categories_mentioned"]}, indent=1)
+        + json.dumps({k: agg[k] for k in ["counts", "barriers", "drivers",
+             "exploration_signal_distribution", "sentiment_distribution",
+             "segments_locked_in", "segments_explorers", "signal_by_segment",
+             "categories_mentioned"]}, indent=1)
         + f"\n\nTAGGED RELEVANT ITEMS (tags only, n={len(compact)}):\n"
         + json.dumps(compact, ensure_ascii=False)
         + f"\n\nQUOTE CANDIDATES (choose the 10 most powerful, keep verbatim):\n"
@@ -188,7 +245,7 @@ def synthesize(context_items: int = 120) -> dict:
     client = LLMClient()
     log.warning("QUOTA ESTIMATE: 1 LLM request for synthesis.")
     llm = client.generate_json(build_llm_prompt(agg, relevant, quote_candidates, context_items),
-                               SYNTH_SCHEMA, system=SYSTEM, max_tokens=4096)
+                               SYNTH_SCHEMA, system=SYSTEM, max_tokens=6144)
 
     # Attach DETERMINISTIC evidence counts + confidence to each hypothesis.
     hypotheses = []
@@ -206,11 +263,25 @@ def synthesize(context_items: int = 120) -> dict:
         })
     hypotheses.sort(key=lambda x: x["evidence_items"], reverse=True)
 
+    merged_n = len(read_jsonl(os.path.join(DATA_DIR, "merged.jsonl")))
+    with_signal = sum(1 for it in relevant if it["exploration_signal"] != "no_signal")
+    explored = sum(1 for it in relevant if it["exploration_signal"] == "explored_new_category")
+    funnel = [{"stage": "Merged items", "count": merged_n or len(tagged)},
+              {"stage": "Tagged", "count": len(tagged)},
+              {"stage": "Relevant (on-topic)", "count": len(relevant)},
+              {"stage": "Carries exploration signal", "count": with_signal},
+              {"stage": "Explored a new category", "count": explored}]
+
     synthesis = {
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
         "framing": ("Candidate barriers/drivers with evidence strength — HYPOTHESES, "
                     "not conclusions. To be screened by survey and refined by interviews."),
         "aggregates": agg,
+        "funnel": funnel,
+        "executive_summary": llm.get("executive_summary", [])[:5],
+        "category_opportunities": llm.get("category_opportunities", [])[:4],
+        "recommended_experiments": llm.get("recommended_experiments", [])[:4],
+        "surprising_insights": llm.get("surprising_insights", [])[:3],
         "locked_in_segments": llm.get("locked_in_segments", [])[:3],
         "explorer_segments": llm.get("explorer_segments", [])[:3],
         "top_jobs_to_be_done": llm.get("top_jobs_to_be_done", [])[:5],
@@ -231,8 +302,13 @@ def to_markdown(s: dict) -> str:
          f"\n_Generated {s['generated_at'][:16]} · {c['relevant']} relevant of "
          f"{c['total_tagged']} tagged items ({c['relevant_pct']}%) · "
          f"{c['irrelevant_filtered']} filtered as noise_",
-         f"\n> {s['framing']}\n",
-         "## Top barriers to category exploration"]
+         f"\n> {s['framing']}\n"]
+    if s.get("executive_summary"):
+        L.append("## Executive summary")
+        for e in s["executive_summary"]:
+            L.append(f"- {e}")
+        L.append("")
+    L.append("## Top barriers to category exploration")
     for b in a["barriers"][:5]:
         L.append(f"- **{b['theme']}** — {b['count']} items ({b['pct_of_relevant']}% of relevant)")
     L.append("\n## What's working (drivers of exploration)")
@@ -253,6 +329,18 @@ def to_markdown(s: dict) -> str:
     L.append("\n## Top unmet needs")
     for u in s["unmet_needs"]:
         L.append(f"- {u}")
+    if s.get("category_opportunities"):
+        L.append("\n## Category-specific opportunities")
+        for co in s["category_opportunities"]:
+            L.append(f"- **{co['category']}** — barrier: {co['barrier']} → opportunity: {co['opportunity']}")
+    if s.get("recommended_experiments"):
+        L.append("\n## Recommended experiments (to validate)")
+        for ex in s["recommended_experiments"]:
+            L.append(f"- **{ex['lever']}** (targets {ex['targets_barrier']}): {ex['hypothesis']}")
+    if s.get("surprising_insights"):
+        L.append("\n## Surprising / counter-intuitive")
+        for si in s["surprising_insights"]:
+            L.append(f"- {si}")
     L.append("\n## Most powerful quotes")
     for q in s["powerful_quotes"]:
         L.append(f"> \"{q['quote']}\"  \n  — {q['source']}, {q['attribution']}")
@@ -285,7 +373,15 @@ def rebuild_from_existing() -> dict:
                            "source_triangulated": ev["triangulated"],
                            "confidence": _derive_confidence(ev)})
     hypotheses.sort(key=lambda x: x["evidence_items"], reverse=True)
-    prev.update({"aggregates": agg, "hypotheses": hypotheses,
+    merged_n = len(read_jsonl(os.path.join(DATA_DIR, "merged.jsonl")))
+    with_signal = sum(1 for it in relevant if it["exploration_signal"] != "no_signal")
+    explored = sum(1 for it in relevant if it["exploration_signal"] == "explored_new_category")
+    funnel = [{"stage": "Merged items", "count": merged_n or len(tagged)},
+              {"stage": "Tagged", "count": len(tagged)},
+              {"stage": "Relevant (on-topic)", "count": len(relevant)},
+              {"stage": "Carries exploration signal", "count": with_signal},
+              {"stage": "Explored a new category", "count": explored}]
+    prev.update({"aggregates": agg, "hypotheses": hypotheses, "funnel": funnel,
                  "rebuilt_at": dt.datetime.now(dt.timezone.utc).isoformat()})
     return prev
 

@@ -21,3 +21,4 @@ data/pipeline.log
 data/pass1_*.log
 data/streamlit_test.log
 data/app_*.png
+data/st*.log

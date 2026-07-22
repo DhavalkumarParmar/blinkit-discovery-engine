@@ -167,6 +167,8 @@ class LLMClient:
                     self.stats["retries"] += 1
                     _backoff_sleep(attempt, r.headers.get("retry-after"))
                     continue
+                if r.status_code == 413:  # payload too large — Gemini has bigger context
+                    raise ProviderExhausted(f"Groq[{model}] 413 payload too large")
                 r.raise_for_status()
                 content = r.json()["choices"][0]["message"]["content"]
                 self.stats["groq_models_used"][model] = \
