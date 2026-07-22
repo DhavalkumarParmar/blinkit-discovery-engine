@@ -122,12 +122,22 @@ def kpi(col, value, label, sub="", color="#12a150"):
                  unsafe_allow_html=True)
 
 
-def donut(labels, values, colors, height=270):
-    fig = go.Figure(go.Pie(labels=labels, values=values, hole=0.58,
-                           marker_colors=colors, sort=False,
-                           textinfo="label+percent", textposition="outside"))
-    fig.update_layout(height=height, margin=dict(l=10, r=10, t=10, b=10),
-                      showlegend=False)
+def donut(labels, values, colors, height=300):
+    # One slice often dominates (e.g. no_signal ~85%), so outside labels collide
+    # and Plotly hides some. Bake the % into a bottom legend so EVERY category is
+    # always readable, and keep a percent label inside the slices where it fits.
+    total = sum(values) or 1
+    disp = [f"{l} · {round(100 * v / total, 1)}%" for l, v in zip(labels, values)]
+    fig = go.Figure(go.Pie(labels=disp, values=values, hole=0.58, marker_colors=colors,
+                           sort=False, direction="clockwise",
+                           textinfo="percent", textposition="inside",
+                           insidetextorientation="horizontal",
+                           hovertemplate="%{label}<extra></extra>"))
+    fig.update_traces(textfont_size=12)
+    fig.update_layout(height=height, margin=dict(l=10, r=10, t=10, b=60),
+                      showlegend=True,
+                      legend=dict(orientation="h", y=-0.08, x=0.5, xanchor="center",
+                                  font=dict(size=11)))
     return fig
 
 
@@ -388,7 +398,7 @@ elif page == "🗺️ How it works":
         mc[1].metric("Merged items", f'{meta.get("total_merged", 0):,}')
         mc[2].metric("AI-tagged", f'{meta.get("total_tagged", 0):,}')
         mc[3].metric("Groq models used", len([k for k in meta.get("tagged_by_model", {})
-                                              if k not in ("unknown",)]))
+                                              if not k.startswith("gemini") and k != "unknown"]))
     arch_path = os.path.join(PROJECT_ROOT, "ARCHITECTURE.md")
     if os.path.exists(arch_path):
         with open(arch_path, encoding="utf-8") as f:
@@ -406,39 +416,91 @@ elif page == "🗺️ How it works":
 
 # ───────────────────────── 3. LIVE PIPELINE ────────────────────────
 elif page == "⚡ Live pipeline":
-    st.subheader("⚡ Live pipeline demo — a few fresh reviews, tagged in real time")
-    st.caption("Fetches 5 fresh App Store reviews and tags each with one live LLM call. "
-               "This is a demo of the mechanism on a tiny sample — it does NOT run the full pipeline.")
-    if st.button("▶️ Run live demo", key="livebtn"):
-        try:
-            from scrapers.app_store import fetch_page, normalize
-            from llm_client import LLMClient
-            from pass1_tag import tag_one_item
-            import datetime as dt
-            with st.spinner("Fetching fresh reviews…"):
-                raw = fetch_page(1)[:12]
+    import datetime as dt
+    import traceback
+    st.subheader("⚡ Live pipeline demo — fresh Play Store reviews, tagged in real time")
+    st.caption("Watch the real mechanism run on a tiny live sample: **scrape → tag → roll up**. "
+               "It fetches a few fresh Google Play reviews and tags each with one live LLM call. "
+               "This is NOT the full pipeline — just a live proof on 5 items.")
+    n_items = st.slider("How many fresh reviews to demo", 3, 8, 5)
+
+    if st.button("▶️ Run live demo", key="livebtn", type="primary"):
+        # ── STEP 1 · SCRAPE ────────────────────────────────────────
+        items = []
+        with st.status("🛰️ Step 1 · Scraping fresh reviews from Google Play…",
+                       expanded=True) as s1:
+            try:
+                from scrapers.play_store import fetch_page, normalize, APP_URL  # noqa: F401
                 sa = dt.datetime.now(dt.timezone.utc).isoformat()
-                items = [normalize(e, sa) for e in raw]
-                items = [i for i in items if len(i["text"]) > 25][:5]
-            client = LLMClient()
-            client.verify_groq_model()
-            rollup = {}
-            for it in items:
-                with st.container():
-                    st.markdown(f'<div class="card"><b>{it["source"]}</b> · {it["date"]} · '
-                                f'★{it["rating"]}<br>{it["text"][:280]}</div>', unsafe_allow_html=True)
-                    with st.spinner("Tagging live…"):
-                        tags = tag_one_item(client, it)
+                st.write("→ Calling Google Play's review endpoint…")
+                raw, _ = fetch_page(None)
+                st.write(f"→ Endpoint returned **{len(raw)}** raw reviews. Normalizing…")
+                for rv in raw:
+                    it = normalize(rv, sa)
+                    if it and len(it["text"]) > 30:
+                        items.append(it)
+                    if len(items) >= n_items:
+                        break
+                if not items:
+                    s1.update(label="Step 1 · No reviews returned (source/network issue)",
+                              state="error")
+                    st.warning("Couldn't fetch reviews right now — try again in a moment.")
+                    st.stop()
+                st.write(f"✅ Captured **{len(items)}** fresh reviews:")
+                for i, it in enumerate(items, 1):
+                    st.markdown(f'<div class="card"><b>#{i}</b> · ★{it["rating"]} · {it["date"]}'
+                                f'<br>{it["text"][:220]}…</div>', unsafe_allow_html=True)
+                s1.update(label=f"✅ Step 1 · Scraped {len(items)} fresh Play Store reviews",
+                          state="complete", expanded=True)
+            except Exception as e:  # noqa: BLE001
+                s1.update(label="Step 1 · Scrape failed", state="error")
+                st.error(f"Scrape error: {e}")
+                st.code(traceback.format_exc())
+                st.stop()
+
+        # ── STEP 2 · TAG EACH LIVE ─────────────────────────────────
+        rollup, tagged_live = {}, []
+        with st.status("🏷️ Step 2 · Tagging each review live with the LLM…",
+                       expanded=True) as s2:
+            try:
+                from llm_client import LLMClient
+                from pass1_tag import tag_one_item
+                client = LLMClient()
+                model = client.verify_groq_model()
+                st.write(f"→ Using model **{model}** (rotates / falls back to Gemini if capped)")
+            except Exception as e:  # noqa: BLE001
+                s2.update(label="Step 2 · Could not init LLM client", state="error")
+                st.error(f"LLM init error: {e}")
+                st.stop()
+            prog = st.progress(0.0)
+            for i, it in enumerate(items, 1):
+                st.markdown(f'**Review #{i}** — tagging…')
+                try:
+                    tags = tag_one_item(client, it)
                     render_tags(tags)
                     sig = tags["exploration_signal"]
                     rollup[sig] = rollup.get(sig, 0) + 1
-                    st.divider()
-            st.success("Roll-up of this mini-batch → " +
-                       " · ".join(f"{SIGNAL_LABEL.get(k,k)}: {n}" for k, n in rollup.items()))
-            st.caption("At scale, these tags aggregate into the Insights tab's barriers, "
-                       "segments, and hypotheses.")
-        except Exception as e:  # noqa: BLE001
-            st.error(f"Live demo failed: {e}")
+                    tagged_live.append(tags)
+                except Exception as e:  # noqa: BLE001
+                    st.warning(f"Review #{i} couldn't be tagged live ({e}). "
+                               "Likely today's free-tier quota — skipping.")
+                prog.progress(i / len(items))
+                st.divider()
+            state = "complete" if tagged_live else "error"
+            s2.update(label=f"{'✅' if tagged_live else '⚠️'} Step 2 · Tagged "
+                      f"{len(tagged_live)}/{len(items)} reviews live", state=state, expanded=True)
+
+        # ── STEP 3 · ROLL UP ───────────────────────────────────────
+        if tagged_live:
+            with st.status("📊 Step 3 · Rolling up into aggregate signal…",
+                           expanded=True) as s3:
+                cols = st.columns(max(len(rollup), 1))
+                for i, (sig, n) in enumerate(rollup.items()):
+                    cols[i].metric(SIGNAL_LABEL.get(sig, sig), n)
+                st.caption("At full scale (2,282 items) these same tags aggregate into the "
+                           "**Insights** tab's barriers, segments, and hypotheses.")
+                s3.update(label="✅ Step 3 · Rolled up — this is exactly how the dashboard is built",
+                          state="complete", expanded=True)
 
 
 # ─────────────────────────── 4. TRY IT LIVE ────────────────────────

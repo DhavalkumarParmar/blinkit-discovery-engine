@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-22T08:35:08.409050+00:00",
+  "generated_at": "2026-07-22T09:57:15.542316+00:00",
   "per_source": {
     "app_store": 479,
     "play_store": 500,
@@ -9,8 +9,8 @@
   "total_merged": 2303,
   "total_tagged": 2282,
   "tagged_by_model": {
-    "unknown": 392,
-    "llama-3.3-70b-versatile": 104,
+    "llama-3.3-70b-versatile": 352,
+    "gemini-3.6-flash": 144,
     "openai/gpt-oss-120b": 406,
     "openai/gpt-oss-20b": 337,
     "llama-3.1-8b-instant": 1043
