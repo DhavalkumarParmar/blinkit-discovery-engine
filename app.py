@@ -100,8 +100,11 @@ section[data-testid="stSidebar"] .stRadio [role="radiogroup"]{gap:.1rem;}
 section[data-testid="stSidebar"] [data-testid="stElementToolbar"]{display:none;}
 .sidenav-title{font-size:1.12rem;font-weight:800;color:#fff;padding:0 4px 0;}
 .sidenav-sub{font-size:.76rem;color:#9fd3b4;padding:0 4px 4px;}
-.export-hd{font-size:.73rem;font-weight:800;letter-spacing:.03em;color:#9fd3b4;padding:10px 4px 2px;}
+.export-hd{font-size:.73rem;font-weight:800;letter-spacing:.03em;color:#9fd3b4;
+  margin:8px 0 0;padding:0 4px;line-height:1.3;}
 /* readable + compact download buttons on the dark sidebar */
+/* margin-top clears the header text above (its box overflows its container) */
+section[data-testid="stSidebar"] [data-testid="stDownloadButton"]{margin-top:10px;}
 section[data-testid="stSidebar"] .stDownloadButton button{
   background:#12a150; border:1px solid #0e8442; border-radius:7px; width:100%;
   font-weight:700; padding:5px 10px; min-height:0; font-size:.86rem;}
