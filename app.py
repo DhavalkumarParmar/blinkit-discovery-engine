@@ -195,13 +195,37 @@ try:
     _synth = load_json(SYNTH_PATH) or {}
     _pdf = _pdf_bytes(_synth.get("generated_at", ""))
 
+    # Tagged reviews as CSV (all items + their AI tags), cached by file mtime.
+    @st.cache_data(show_spinner=False)
+    def _tagged_csv(_mtime):
+        from export_excel import tagged_df
+        rows = read_jsonl(TAGGED_PATH)
+        if not rows:
+            return None
+        return tagged_df(rows).to_csv(index=False).encode("utf-8")
+    _tk = os.path.getmtime(TAGGED_PATH) if os.path.exists(TAGGED_PATH) else 0
+    _csv = _tagged_csv(_tk)
+    _xlsx_path = os.path.join(DATA_DIR, "blinkit_review_analysis.xlsx")
+
     st.sidebar.markdown("---")
-    st.sidebar.markdown('<div class="export-hd">📥 EXPORT FINDINGS</div>', unsafe_allow_html=True)
-    st.sidebar.download_button("Markdown  ·  .md", _report_md,
+    st.sidebar.markdown('<div class="export-hd">📥 SYNTHESIZED FINDINGS</div>', unsafe_allow_html=True)
+    st.sidebar.download_button("Report  ·  .md", _report_md,
                               file_name="blinkit_findings_report.md", mime="text/markdown")
-    st.sidebar.download_button("PDF with charts  ·  .pdf", _pdf,
+    st.sidebar.download_button("Report + charts  ·  .pdf", _pdf,
                               file_name="blinkit_findings_report.pdf", mime="application/pdf")
-    st.sidebar.caption("Full report — every barrier, segment, quote, hypothesis & validation.")
+
+    st.sidebar.markdown('<div class="export-hd">📄 TAGGED REVIEWS (RAW DATA)</div>',
+                        unsafe_allow_html=True)
+    if _csv is not None:
+        st.sidebar.download_button("All tagged reviews  ·  .csv", _csv,
+                                  file_name="blinkit_tagged_reviews.csv", mime="text/csv")
+    if os.path.exists(_xlsx_path):
+        with open(_xlsx_path, "rb") as _xf:
+            st.sidebar.download_button("Full workbook (3 tabs)  ·  .xlsx", _xf.read(),
+                file_name="blinkit_review_analysis.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    st.sidebar.caption("CSV = every tagged item + all its tags. Workbook adds Insights "
+                       "& Validation tabs.")
 except Exception:  # noqa: BLE001  — never let the report break the nav
     pass
 
