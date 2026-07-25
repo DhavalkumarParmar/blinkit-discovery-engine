@@ -89,20 +89,27 @@ small.muted{color:#889;}
 .exec{background:linear-gradient(180deg,#f6fbf8,#eef7f1);border:1px solid #d5e8dc;
   border-radius:10px;padding:11px 16px;margin-bottom:8px;font-size:1.0rem;color:#0d3a24;}
 .exec b{color:#0b6b3a;}
-/* vertical left-side nav */
-section[data-testid="stSidebar"] {background:#0b2e1e; min-width:250px;}
+/* vertical left-side nav — compact so everything fits without scrolling */
+section[data-testid="stSidebar"] {background:#0b2e1e; min-width:248px;}
 section[data-testid="stSidebar"] * {color:#eaf5ee;}
-section[data-testid="stSidebar"] .stRadio label {font-size:1.02rem; padding:8px 6px;}
-.sidenav-title{font-size:1.15rem;font-weight:800;color:#fff;padding:6px 4px 2px;}
-.sidenav-sub{font-size:.78rem;color:#9fd3b4;padding:0 4px 12px;}
-.export-hd{font-size:.78rem;font-weight:800;letter-spacing:.04em;color:#9fd3b4;padding:4px 4px 6px;}
-/* readable download buttons on the dark sidebar */
+section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]{padding-top:1rem;}
+/* tighten the gap between every sidebar element (fits one screen, no scroll) */
+section[data-testid="stSidebar"] [data-testid="stVerticalBlock"]{gap:.45rem;}
+section[data-testid="stSidebar"] .stRadio label {font-size:1rem; padding:3px 6px;}
+section[data-testid="stSidebar"] .stRadio [role="radiogroup"]{gap:.1rem;}
+section[data-testid="stSidebar"] [data-testid="stElementToolbar"]{display:none;}
+.sidenav-title{font-size:1.12rem;font-weight:800;color:#fff;padding:0 4px 0;}
+.sidenav-sub{font-size:.76rem;color:#9fd3b4;padding:0 4px 4px;}
+.export-hd{font-size:.73rem;font-weight:800;letter-spacing:.03em;color:#9fd3b4;padding:10px 4px 2px;}
+/* readable + compact download buttons on the dark sidebar */
 section[data-testid="stSidebar"] .stDownloadButton button{
-  background:#12a150; border:1px solid #0e8442; border-radius:8px; width:100%;
-  font-weight:700; padding:8px 10px;}
+  background:#12a150; border:1px solid #0e8442; border-radius:7px; width:100%;
+  font-weight:700; padding:5px 10px; min-height:0; font-size:.86rem;}
 section[data-testid="stSidebar"] .stDownloadButton button *{color:#ffffff !important;}
 section[data-testid="stSidebar"] .stDownloadButton button:hover{
   background:#0e8442; border-color:#0b6b3a;}
+section[data-testid="stSidebar"] [data-testid="stCaptionContainer"]{
+  font-size:.72rem; line-height:1.15;}
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
@@ -207,7 +214,6 @@ try:
     _csv = _tagged_csv(_tk)
     _xlsx_path = os.path.join(DATA_DIR, "blinkit_review_analysis.xlsx")
 
-    st.sidebar.markdown("---")
     st.sidebar.markdown('<div class="export-hd">📥 SYNTHESIZED FINDINGS</div>', unsafe_allow_html=True)
     st.sidebar.download_button("Report  ·  .md", _report_md,
                               file_name="blinkit_findings_report.md", mime="text/markdown")
