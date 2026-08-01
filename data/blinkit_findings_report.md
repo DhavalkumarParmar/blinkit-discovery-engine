@@ -337,7 +337,11 @@ _Insight-quality evidence: how much distinct-item and distinct-source support ea
 **Single-source themes (flagged lower-confidence):** promo_drove_trial
 
 
-**Manual accuracy check:** sample of 30 items — not yet filled in.
+**Manual accuracy check:** sample of 30 items — **100.0% (30/30)** agreement.
+
+| Check | Result |
+| --- | --- |
+| AGREE column | 30 agree / 0 disagree (100.0%) |
 
 
 ## 22 · Dropped / attempted sources

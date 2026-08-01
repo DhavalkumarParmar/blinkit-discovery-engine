@@ -20,6 +20,7 @@ import json
 import os
 
 from common import DATA_DIR, get_logger
+from vocab import EXPLORATION_SIGNALS
 
 log = get_logger("score")
 
@@ -41,15 +42,28 @@ def _to_bool(v: str):
     return None  # unfilled / unrecognized
 
 
+def _read_rows() -> list[dict]:
+    """Read the sample whether it's a real CSV or an Excel file saved with a
+    .csv name (Excel writes the OpenXML 'PK\\x03\\x04' zip format). Robust to
+    users who edit + save in Excel."""
+    with open(SAMPLE_CSV, "rb") as f:
+        head = f.read(4)
+    if head[:2] == b"PK":  # xlsx/xlsm workbook mislabeled as .csv
+        import pandas as pd
+        df = pd.read_excel(SAMPLE_CSV).fillna("")
+        return df.astype(str).to_dict("records")
+    with open(SAMPLE_CSV, encoding="utf-8-sig", newline="") as f:
+        return list(csv.DictReader(f))
+
+
 def score() -> dict | None:
     if not os.path.exists(SAMPLE_CSV):
         log.error("No %s — run validate.py first.", SAMPLE_CSV)
         return None
 
-    with open(SAMPLE_CSV, encoding="utf-8") as f:
-        rows = list(csv.DictReader(f))
+    rows = _read_rows()
     if not rows:
-        log.error("Sample CSV is empty.")
+        log.error("Sample file is empty.")
         return None
 
     total = len(rows)
@@ -65,16 +79,18 @@ def score() -> dict | None:
         elif a in _DISAGREE:
             agree_n += 1
 
-        # 2) field-level agreement (only where the human filled a value)
-        h_rel = _to_bool(r.get("HUMAN_is_relevant"))
-        if h_rel is not None:
+        # 2) OPTIONAL field-level agreement — only when the HUMAN column holds an
+        #    ACTUAL comparable value, not a bare Y/N (Y/N is already captured by the
+        #    AGREE column; comparing it as a value produces misleading numbers).
+        h_rel = (r.get("HUMAN_is_relevant") or "").strip().lower()
+        if h_rel in ("true", "t", "relevant", "false", "f", "irrelevant"):
             rel_checked += 1
-            ai_rel = _to_bool(str(r.get("is_relevant")))
-            if h_rel == ai_rel:
+            human_rel = h_rel in ("true", "t", "relevant")
+            if human_rel == _to_bool(str(r.get("is_relevant"))):
                 rel_match += 1
 
         h_sig = (r.get("HUMAN_exploration_signal") or "").strip().lower()
-        if h_sig:
+        if h_sig in EXPLORATION_SIGNALS:  # a real signal name, not Y/N
             sig_checked += 1
             if h_sig == (r.get("exploration_signal") or "").strip().lower():
                 sig_match += 1

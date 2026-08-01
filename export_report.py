@@ -224,11 +224,15 @@ def build_report(synth: dict, validation: dict, meta: dict, probe: dict | None =
              + (f"**{acc}** agreement" if acc else "not yet filled in") + ".\n")
     if mc.get("accuracy_breakdown"):
         b = mc["accuracy_breakdown"]
-        L.append(_table(["Check", "Result"], [
-            ["AGREE column", f"{b.get('agree')} agree / {b.get('disagree')} disagree ({b.get('agree_rate_pct')}%)"],
-            ["is_relevant agreement", f"{b.get('is_relevant_agreement_pct')}% ({b.get('is_relevant_checked')} checked)"],
-            ["exploration_signal agreement", f"{b.get('exploration_signal_agreement_pct')}% ({b.get('exploration_signal_checked')} checked)"],
-        ]))
+        rows = [["AGREE column", f"{b.get('agree')} agree / {b.get('disagree')} disagree "
+                 f"({b.get('agree_rate_pct')}%)"]]
+        if b.get("is_relevant_checked"):  # only if actual values were provided
+            rows.append(["is_relevant agreement",
+                         f"{b.get('is_relevant_agreement_pct')}% ({b.get('is_relevant_checked')} checked)"])
+        if b.get("exploration_signal_checked"):
+            rows.append(["exploration_signal agreement",
+                         f"{b.get('exploration_signal_agreement_pct')}% ({b.get('exploration_signal_checked')} checked)"])
+        L.append(_table(["Check", "Result"], rows))
 
     # ── 22. Dropped sources ──
     if probe:

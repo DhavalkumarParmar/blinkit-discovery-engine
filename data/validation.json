@@ -316,7 +316,19 @@
   "manual_check": {
     "sample_size": 30,
     "sample_file": "validation_sample.csv",
-    "accuracy_rate": null,
-    "instructions": "Open validation_sample.csv, fill HUMAN_is_relevant / HUMAN_exploration_signal / AGREE_(Y/N), then compute accuracy = #AGREE / sample_size and record it here."
+    "accuracy_rate": "100.0% (30/30)",
+    "instructions": "Open validation_sample.csv, fill HUMAN_is_relevant / HUMAN_exploration_signal / AGREE_(Y/N), then compute accuracy = #AGREE / sample_size and record it here.",
+    "accuracy_breakdown": {
+      "sample_size": 30,
+      "rows_reviewed_agree_column": 30,
+      "agree": 30,
+      "disagree": 0,
+      "agree_rate_pct": 100.0,
+      "is_relevant_agreement_pct": null,
+      "is_relevant_checked": 0,
+      "exploration_signal_agreement_pct": null,
+      "exploration_signal_checked": 0,
+      "scored_at": "2026-08-01T16:26:35.675952+00:00"
+    }
   }
 }
