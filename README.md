@@ -37,6 +37,9 @@ and a validation layer.
 📐 See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the full ASCII system diagram
 (also rendered live in the dashboard's **🗺️ How it works** tab).
 
+🧭 New here (human or AI)? Start with [`CONTEXT.md`](CONTEXT.md) — what this is,
+what's deliberately out of scope, the known gaps, and the v2 backlog.
+
 ---
 
 ## Quick start
