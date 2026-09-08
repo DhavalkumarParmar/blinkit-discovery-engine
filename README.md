@@ -40,6 +40,10 @@ and a validation layer.
 🧭 New here (human or AI)? Start with [`CONTEXT.md`](CONTEXT.md) — what this is,
 what's deliberately out of scope, the known gaps, and the v2 backlog.
 
+🔧 Want to reuse this engine for a **different subject**? See
+[`PERSONAL_FORK_GUIDE.md`](PERSONAL_FORK_GUIDE.md) — the three-layer model, every
+config change point with line numbers, and a paste-ready prompt for a new session.
+
 ---
 
 ## Quick start
